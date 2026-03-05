@@ -12,6 +12,16 @@
         "test": "vitest run",
         "test:watch": "vitest"
     },
+    "license": "MIT",
+    "author": "Glen Ford",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/harmonicmean-ai/pocket-kubrick.git"
+    },
+    "homepage": "https://github.com/harmonicmean-ai/pocket-kubrick#readme",
+    "bugs": {
+        "url": "https://github.com/harmonicmean-ai/pocket-kubrick/issues"
+    },
     "engines": {
         "node": ">=20"
     },
