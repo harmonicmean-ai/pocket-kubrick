@@ -229,6 +229,7 @@ TEMP-*
 # LLM code assistant instructions -- please do NOT contribute LLM instructions to the repo
 AGENTS.md
 CLAUDE.md
+.claude/
 
 # Specific to this repo
 src/compose/public/js/shared/annotation-renderers.js
