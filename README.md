@@ -13,7 +13,10 @@ Note that only Inworld is supported for voice synthesis currently. And, it's the
 - `keyframes` command — exports frame grabs to see where and in what order annotations will land (does not treat items in text stacks as separate keyframes at this time)
 - automatic transcript generation – run `build` with the `--from transcript` flag (or just the whole thing) to generate both Markdown and HTML versions of your script, suitable for framing!
 - `inworld_sampler.py` — quick and dirty CLI tool to get sample audio from Inworld
+- `combine` command combines multiple rendered videos into one; useful because videos can take a while to render, and the best practice is to break long ones up into manageable chunks—no need to re-render a long video when you're only changing one portion
 - `.env` variables — if you consistently want a non-default folder for your input and output assets, put the path in `PROJECT_ROOT` for convenience
+
+See [CLI Cheat Sheet](DOCS/CLI%20Cheat%20Sheet.md) for more on the commands mentioned here.
 
 
 ## My First Kubrick
