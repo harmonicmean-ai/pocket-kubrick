@@ -1,0 +1,3 @@
+# only needed for the inworld_sampler script; not part of core Pocket Kubrick
+python-dotenv
+requests

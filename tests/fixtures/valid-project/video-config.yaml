@@ -1,0 +1,93 @@
+video:
+  title: "How to Configure Notifications"
+  resolution: 1920x1080
+  fps: 30
+  format:
+    - mp4
+  quality: standard
+  theme:
+    background: "#121212"
+    accent: "#07C107"
+    font: "Open Sans"
+    font_size: 24
+    padding: 40
+
+voices:
+  narrator:
+    voice_id: Craig
+    speaking_rate: 0.95
+  aside:
+    voice_id: Ashley
+    speaking_rate: 1.0
+
+default_voice: narrator
+
+scenes:
+  - id: 01-intro
+    script: |
+      Welcome! In this quick guide, we'll show you how to
+      set up notifications -- so you never miss an update.
+    transition: fade
+    pause_after: 0.8
+    visuals:
+      - type: text
+        content: "How to Configure Notifications"
+        position: { x: 960, y: 500 }
+        style: title
+        align: center
+        animate: fade-in
+
+  - id: 02-settings-icon
+    script: |
+      First, tap the *settings icon* in the top right corner
+      of the main screen.
+    transition: fade
+    pause_after: 0.5
+    visuals:
+      - type: screenshot
+        src: screenshots/main-screen.png
+        animate: fade-in
+
+      - type: circle
+        target: { x: 1820, y: 60, r: 30 }
+        color: $accent
+        at: "settings-icon"
+        animate: pulse
+
+      - type: arrow
+        from: { x: 1750, y: 120 }
+        to: { x: 1820, y: 75 }
+        at: "top-right"
+        animate: draw
+        color: $accent
+
+  - id: 03-notification-panel
+    script: |
+      You'll see the notification preferences panel.
+      Toggle on the alerts you want to receive...
+      and you're all set.
+
+      [voice aside]Tip: you can always come back here to change these later.[/voice]
+    transition: slide-left
+    pause_after: 0.5
+    visuals:
+      - type: screenshot
+        src: screenshots/notification-panel.png
+        animate: slide-left
+
+      - type: highlight
+        region: { x: 40, y: 200, w: 400, h: 50 }
+        at: "toggle-on"
+        animate: fade-in
+
+      - type: cursor
+        to: { x: 440, y: 225 }
+        at: "toggle-on"
+        click: true
+
+      - type: text
+        content: "Tap each toggle to enable"
+        position: { x: 500, y: 210 }
+        style: callout
+        at: "alerts-you-want"
+        animate: fade-in

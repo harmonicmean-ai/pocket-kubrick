@@ -1,0 +1,70 @@
+# You engineer Pocket Kubrick
+
+Your job is to create and maintain pocket-kubrick, a tool for automated generation of screencast videos using custom, AI-powered generation.
+
+
+## Forbidden tools
+
+**NEVER** execute git commands unless I have specifically asked in advance (e.g. "search for a git commit message containing 'foo'").
+
+
+## Never don't do this
+*   Always activate the virtual environment before trying to test or compile files. The venv is typically in `venv/`
+*   The Python venv activation clobbers PATH, removing standard system directories. Always prepend system paths when running shell commands: `PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"`
+
+
+## Coding Standards
+
+Please follow these rules diligently:
+
+- **Do not fail to undertsand, respect, and follow existing conventions in the codebase**, even when they might be non-idomatic for a given language. This edict includes writing very DRY code. If there is a function/method suitable for a given piece of functionality, absolutely do not copy it. Call it instead. If it's *almost* suitable, then modify it with optional parameters or a similar approach so that it can be made fully suitable **without** affecting existing calls. (Such changes must be guaranteed to not break existing functionality.) If the suitable method is in an inconvenient place (e.g. it's in a class that we're not subclassing), *extract* it into a common superclass, or a helper function if there aren't too many members of `self` in use. If you believe you can't avoid whitebox duplication, you **must** ask for permission and explain the reasoning.
+
+I *love* having all your Python `import` statements at the top of the code file. It makes me happy!
+
+When logging/reporting Python exceptions, always include the type, not just the exception text: f"{type(e).__name__}: {str(e)}"
+
+Use 4 spaces as tabs in all languages, including YAML, JSON, Markdown, HTML.
+
+Avoid single-quoting strings whenever possible; use double-quoted strings by default in all languages.
+
+Our stack: Mac, zsh, VS Code.
+
+Always search for and use the latest documentation and other references wheh consuming APIs and SDKs. Do not rely on your memory since interfaces frequently change.
+
+Never use emojis in code unless instructed otherwise.
+
+
+### TypeScript / Node.js Conventions
+*   ESM only (`"type": "module"` in `package.json`). No CommonJS `require()`.
+*   Use Commander.js for CLI argument parsing.
+*   All `import` statements at the top of the file — no dynamic imports except where genuinely needed (e.g., optional heavy dependencies).
+*   Use double-quoted strings everywhere (enforced by project style).
+*   Use explicit type annotations liberally — on function parameters, return types, and local variables where the type is non-obvious:
+    ```ts
+    let child: SomeClass | null = null;
+    for (const [index, item] of children.entries()) {
+        child = item;
+    }
+    ```
+*   Put two blank lines above top-level `function` and `class` declarations.
+*   Use 4-space indentation.
+*   Prefer `interface` over `type` for object shapes, unless union types or mapped types are needed.
+*   Use `const` by default; `let` only when reassignment is needed; never `var`.
+*   When logging/reporting exceptions, always include the type: `` `${(e as Error).constructor.name}: ${(e as Error).message}` ``
+
+
+### Python Conventions
+*   The nested double quote in `f"{x.get("y")}"` will fail — avoid that nesting.
+*   Avoid `utcnow` — use `timezone.utc` instead.
+*   In CLI scripts, use argparse to structure arguments and add help text.
+*   Put two blank lines above `func` and `class` definitions.
+*   Use type hinting liberally to help your human counterparts. This goes beyond method definitions—for example, here I've added a line declaring a variable that didn't need to be declared, but it's much better since the IDE will pick up the type `SomeClass`:
+    ```python
+    child: SomeClass = None
+    for obs_index, child in enumerate(children):
+        …
+    ```
+
+## Misc.
+
+*   Put documentation and instructions in the `DOCS/` folder

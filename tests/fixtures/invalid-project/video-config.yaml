@@ -1,0 +1,15 @@
+video:
+  title: "Bad Video"
+  fps: 45
+
+voices: {}
+
+default_voice: nonexistent
+
+scenes:
+  - script: |
+      This is dummy script text for an invalid project.
+    visuals:
+      - type: circle
+        at: "nonexistent-anchor"
+        color: $bogus

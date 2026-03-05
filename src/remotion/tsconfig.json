@@ -1,0 +1,10 @@
+{
+    "extends": "../../tsconfig.json",
+    "compilerOptions": {
+        "jsx": "react-jsx",
+        "verbatimModuleSyntax": false,
+        "rootDir": "../.."
+    },
+    "include": [".", "../resolver/types.ts", "../schema/types.ts", "../schema/video-config.ts"],
+    "exclude": []
+}

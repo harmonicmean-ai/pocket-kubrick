@@ -1,0 +1,415 @@
+/* ── Reset & Base ────────────────────────────────────────────── */
+
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    height: 100%;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 13px;
+    color: #e0e0e0;
+    background: #1a1a1a;
+}
+
+#app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+
+/* ── Toolbar ─────────────────────────────────────────────────── */
+
+#toolbar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 8px 16px;
+    background: #252525;
+    border-bottom: 1px solid #333;
+    flex-shrink: 0;
+}
+
+#scene-nav,
+#keyframe-nav {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+#scene-nav button,
+#keyframe-nav button {
+    padding: 4px 8px;
+    background: #333;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #e0e0e0;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+#scene-nav button:hover,
+#keyframe-nav button:hover {
+    background: #444;
+}
+
+#scene-nav button:disabled,
+#keyframe-nav button:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+#scene-select,
+#keyframe-select {
+    padding: 4px 8px;
+    background: #333;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #e0e0e0;
+    font-size: 13px;
+    max-width: 300px;
+}
+
+#tool-buttons {
+    display: flex;
+    gap: 4px;
+}
+
+.tool-btn {
+    padding: 6px 12px;
+    background: #333;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #ccc;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.tool-btn:hover {
+    background: #444;
+}
+
+.tool-btn.active {
+    background: #07C107;
+    border-color: #07C107;
+    color: #000;
+    font-weight: 600;
+}
+
+#project-title {
+    margin-left: auto;
+    font-size: 13px;
+    color: #888;
+}
+
+
+/* ── Workspace ───────────────────────────────────────────────── */
+
+#workspace {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+#canvas-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #111;
+    overflow: hidden;
+    position: relative;
+}
+
+#canvas-container svg {
+    display: block;
+    filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.4));
+}
+
+
+/* ── Sidebar ─────────────────────────────────────────────────── */
+
+#sidebar {
+    width: 320px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    background: #222;
+    border-left: 1px solid #333;
+    overflow-y: auto;
+}
+
+#sidebar h3 {
+    padding: 10px 12px 6px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #888;
+    border-bottom: 1px solid #333;
+}
+
+
+/* ── Annotation List ─────────────────────────────────────────── */
+
+#annotation-list {
+    flex-shrink: 0;
+    max-height: 40%;
+    overflow-y: auto;
+}
+
+#annotation-items {
+    padding: 4px 0;
+}
+
+.annotation-item {
+    display: flex;
+    align-items: center;
+    padding: 6px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #2a2a2a;
+    transition: background 0.1s;
+    user-select: none;
+}
+
+.annotation-item:hover {
+    background: #2a2a2a;
+}
+
+.annotation-item.selected {
+    background: #1a3a1a;
+    border-left: 3px solid #07C107;
+    padding-left: 9px;
+}
+
+.annotation-item .type-label {
+    font-weight: 600;
+    font-size: 12px;
+    color: #aaa;
+    width: 65px;
+    flex-shrink: 0;
+    text-transform: capitalize;
+}
+
+.annotation-item .summary {
+    flex: 1;
+    font-size: 11px;
+    color: #777;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.annotation-item .delete-btn {
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 4px;
+    line-height: 1;
+}
+
+.annotation-item .delete-btn:hover {
+    color: #ff4444;
+}
+
+.annotation-item.drag-over {
+    border-top: 2px solid #07C107;
+}
+
+.empty-message {
+    padding: 16px 12px;
+    color: #555;
+    font-style: italic;
+    font-size: 12px;
+}
+
+
+/* ── Properties Panel ────────────────────────────────────────── */
+
+#properties-panel {
+    flex-shrink: 0;
+    border-top: 1px solid #333;
+}
+
+#properties-fields {
+    padding: 8px 12px;
+}
+
+.placeholder {
+    color: #555;
+    font-style: italic;
+    font-size: 12px;
+}
+
+.prop-group {
+    margin-bottom: 10px;
+}
+
+.prop-group-label {
+    font-size: 11px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.prop-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.prop-row label {
+    font-size: 11px;
+    color: #999;
+    width: 60px;
+    flex-shrink: 0;
+    text-align: right;
+}
+
+.prop-row input[type="number"],
+.prop-row input[type="text"] {
+    flex: 1;
+    padding: 3px 6px;
+    background: #333;
+    border: 1px solid #444;
+    border-radius: 3px;
+    color: #e0e0e0;
+    font-size: 12px;
+    font-family: "SF Mono", "Fira Code", monospace;
+}
+
+.prop-row input[type="number"] {
+    width: 70px;
+    flex: 0 0 70px;
+}
+
+.prop-row select {
+    flex: 1;
+    padding: 3px 6px;
+    background: #333;
+    border: 1px solid #444;
+    border-radius: 3px;
+    color: #e0e0e0;
+    font-size: 12px;
+}
+
+.prop-row input[type="checkbox"] {
+    accent-color: #07C107;
+}
+
+.color-swatch {
+    width: 18px;
+    height: 18px;
+    border-radius: 3px;
+    border: 1px solid #555;
+    flex-shrink: 0;
+}
+
+
+/* ── YAML Output ─────────────────────────────────────────────── */
+
+#yaml-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid #333;
+    min-height: 150px;
+}
+
+#yaml-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-right: 12px;
+}
+
+#yaml-header h3 {
+    border-bottom: none;
+}
+
+#copy-yaml {
+    padding: 3px 10px;
+    background: #333;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #ccc;
+    cursor: pointer;
+    font-size: 11px;
+}
+
+#copy-yaml:hover {
+    background: #444;
+}
+
+#copy-yaml.copied {
+    background: #07C107;
+    color: #000;
+    border-color: #07C107;
+}
+
+#yaml-output {
+    flex: 1;
+    padding: 8px 12px;
+    font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #b0c4b0;
+    overflow: auto;
+    white-space: pre;
+    tab-size: 2;
+}
+
+
+/* ── Canvas Annotation Styles ────────────────────────────────── */
+
+.annotation-group {
+    cursor: pointer;
+}
+
+.annotation-group:hover {
+    filter: brightness(1.2);
+}
+
+.annotation-group.selected {
+    filter: none;
+}
+
+.selection-handle {
+    fill: white;
+    stroke: #07C107;
+    stroke-width: 2;
+    cursor: grab;
+}
+
+.selection-handle:hover {
+    fill: #07C107;
+}
+
+.drawing-preview {
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+
+/* ── Multi-screenshot Notice ─────────────────────────────────── */
+
+.notice {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.75);
+    color: #aaa;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 11px;
+    pointer-events: none;
+}

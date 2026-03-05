@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compose - Visual Annotation Editor</title>
+    <link rel="stylesheet" href="/css/compose.css">
+</head>
+<body>
+    <div id="app">
+        <header id="toolbar">
+            <div id="scene-nav">
+                <button id="prev-scene" title="Previous scene">&lt;</button>
+                <select id="scene-select"></select>
+                <button id="next-scene" title="Next scene">&gt;</button>
+            </div>
+            <div id="keyframe-nav" style="display: none;">
+                <button id="prev-keyframe" title="Previous keyframe">&lt;</button>
+                <select id="keyframe-select"></select>
+                <button id="next-keyframe" title="Next keyframe">&gt;</button>
+            </div>
+            <div id="tool-buttons">
+                <button class="tool-btn active" data-tool="select" title="Select / Move (S)">Select</button>
+                <button class="tool-btn" data-tool="highlight" title="Highlight (H)">Highlight</button>
+                <button class="tool-btn" data-tool="circle" title="Circle (C)">Circle</button>
+                <button class="tool-btn" data-tool="arrow" title="Arrow (A)">Arrow</button>
+                <button class="tool-btn" data-tool="badge" title="Badge (B)">Badge</button>
+                <button class="tool-btn" data-tool="cursor" title="Cursor (U)">Cursor</button>
+                <button class="tool-btn" data-tool="zoom" title="Zoom (Z)">Zoom</button>
+            </div>
+            <div id="project-title"></div>
+        </header>
+        <main id="workspace">
+            <div id="canvas-container">
+                <!-- SVG inserted by canvas.js -->
+            </div>
+            <aside id="sidebar">
+                <section id="annotation-list">
+                    <h3>Annotations</h3>
+                    <div id="annotation-items"></div>
+                </section>
+                <section id="properties-panel">
+                    <h3>Properties</h3>
+                    <div id="properties-fields">
+                        <p class="placeholder">Select an annotation to edit its properties.</p>
+                    </div>
+                </section>
+                <section id="yaml-section">
+                    <div id="yaml-header">
+                        <h3>YAML Output</h3>
+                        <button id="copy-yaml" title="Copy to clipboard">Copy</button>
+                    </div>
+                    <pre id="yaml-output"></pre>
+                </section>
+            </aside>
+        </main>
+    </div>
+    <script type="module" src="/js/app.js"></script>
+</body>
+</html>
