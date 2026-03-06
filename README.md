@@ -12,9 +12,10 @@ Note that only Inworld is supported for voice synthesis currently. And, it's the
 - `compose` command — opens a web browser letting you edit video annotations (does not save at this point, so it requires copy/pasting YAML)
 - `keyframes` command — exports frame grabs to see where and in what order annotations will land (does not treat items in text stacks as separate keyframes at this time)
 - automatic transcript generation – run `build` with the `--from transcript` flag (or just the whole thing) to generate both Markdown and HTML versions of your script, suitable for framing!
+- easily use multiple voices within a single video or even a single scene—see the [Video Production Guide](DOCS/Full%20Guide%20To%20Video%20Production.md) for the syntax
 - `inworld_sampler.py` — quick and dirty CLI tool to get sample audio from Inworld
 - `combine` command combines multiple rendered videos into one; useful because videos can take a while to render, and the best practice is to break long ones up into manageable chunks—no need to re-render a long video when you're only changing one portion
-- `.env` variables — if you consistently want a non-default folder for your input and output assets, put the path in `PROJECT_ROOT` for convenience
+- if you consistently want a non-default folder for your input and output assets, put the path in `PROJECT_ROOT` in the `.env` file so
 
 See [CLI Cheat Sheet](DOCS/CLI%20Cheat%20Sheet.md) for more on the commands mentioned here.
 
