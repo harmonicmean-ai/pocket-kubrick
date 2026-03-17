@@ -94,6 +94,22 @@ For each scene, states are built cumulatively:
 
 Supported annotation types: `arrow`, `highlight`, `circle`, `badge`, `cursor`, `text`, `stack`.
 
+### compose
+
+Open a local web-based visual editor for positioning annotations on scene screenshots. The editor loads your project's `video-config.yaml` and screenshots, letting you drag and adjust annotation positions interactively. The resulting YAML coordinates are displayed for you to copy back into your config (no auto-save yet).
+
+```bash
+npx tsx src/index.ts compose --project <name> [--scene <index>] [--port <port>] [--verbose]
+```
+
+| Option | Default | Notes |
+|---|---|---|
+| `--scene` | (none) | Jump directly to a scene by 1-based index |
+| `--port` | `4400` | Port for the local editor server |
+| `--verbose` | off | Show detailed logging |
+
+The editor opens automatically in your default browser at `http://localhost:<port>`. Press Ctrl+C in the terminal to stop the server.
+
 ### combine
 
 Concatenate two or more rendered videos into a single file. All source videos must share the same dimensions, FPS, and codec (no re-encoding — uses FFmpeg stream copy).

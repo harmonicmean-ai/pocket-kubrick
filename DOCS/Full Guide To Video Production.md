@@ -659,6 +659,21 @@ The validator checks the following before any audio is generated:
 | Screenshot children type | error   | `children` array contains a `type: "screenshot"` entry        |
 
 
+## Composing Annotations Visually
+
+The `compose` command opens a local web-based editor where you can position annotations on your scene screenshots interactively, instead of guessing pixel coordinates by hand.
+
+```bash
+npx tsx src/index.ts compose --project your-video-title
+```
+
+The editor loads your `video-config.yaml` and screenshots, then opens in your default browser at `http://localhost:4400`. You can drag annotations, adjust coordinates, and see the results in real time. Use `--scene <index>` to jump directly to a specific scene (1-based).
+
+When you're happy with the positions, copy the YAML output from the editor back into your `video-config.yaml`. The editor does not auto-save -- this is intentional so you can experiment freely without risk.
+
+The compose editor is especially useful after writing your initial config, to fine-tune `position`, `target`, `from`/`to`, and `region` values before running a full build.
+
+
 ## Iteration Workflow
 
 A typical cycle looks like this:
@@ -667,18 +682,24 @@ A typical cycle looks like this:
 
 2. **Update configuration** -- Edit `video-config.yaml` to add/modify scenes, adjust voices, define visual events and anchor phrases.
 
-3. **Validate** -- Run `validate` to catch errors before spending API credits:
+3. **Compose** -- Use the visual editor to fine-tune annotation positions:
+   ```bash
+   npx tsx src/index.ts compose --project your-video-title
+   ```
+   Copy the resulting YAML back into your config when satisfied.
+
+4. **Validate** -- Run `validate` to catch errors before spending API credits:
    ```bash
    npx tsx src/index.ts validate --project your-video-title --verbose
    ```
 
-4. **Build** -- Run the full pipeline:
+5. **Build** -- Run the full pipeline:
    ```bash
    npx tsx src/index.ts build --project your-video-title --verbose
    ```
 
-5. **Review** -- Listen to `generated/audio/full.mp3`. Check timepoints in the JSON files. If something sounds wrong, revise the script and re-run. Changed text will hit the API; unchanged text will use the cache.
+6. **Review** -- Listen to `generated/audio/full.mp3`. Check timepoints in the JSON files. If something sounds wrong, revise the script and re-run. Changed text will hit the API; unchanged text will use the cache.
 
-6. **Repeat** -- Iterate on scripts and visuals until the narration is solid. The cache keeps re-runs fast and cheap.
+7. **Repeat** -- Iterate on scripts and visuals until the narration is solid. The cache keeps re-runs fast and cheap.
 
 The pipeline now includes three additional stages -- `resolve` (build a frame-accurate visual timeline from timepoints), `render` (produce the final video via Remotion), and `transcript` (generate a speaker-attributed Markdown transcript). See the [CLI Cheat Sheet](Using%20support-producer.md) for the complete command reference, including `--from`/`--through` flags for selective stage execution.
