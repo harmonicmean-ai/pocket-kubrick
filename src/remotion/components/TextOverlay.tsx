@@ -1,5 +1,6 @@
 import React from "react";
 import { applyAnimation } from "../util/animations";
+import { resolveFontFamily } from "../util/fonts";
 import type { TextEvent } from "../util/types";
 
 
@@ -52,7 +53,7 @@ export const TextOverlay: React.FC<TextOverlayProps> = ({ event, frame, fps }) =
         opacity: anim.opacity,
         zIndex: event.z_index,
         color: event.color ?? "#FFFFFF",
-        fontFamily: "Open Sans, sans-serif",
+        fontFamily: resolveFontFamily(event.font),
         textAlign: event.align ?? "left",
         whiteSpace: "pre-wrap",
         ...presetStyle,

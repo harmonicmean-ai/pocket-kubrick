@@ -61,6 +61,7 @@ const TextEventSchema = BaseEventSchema.extend({
     style: z.enum(["title", "caption", "callout", "label"]),
     align: z.enum(["left", "center", "right"]).optional(),
     color: z.string().optional(),
+    font: z.string().optional(),
     font_size: z.number().optional(),
 });
 
@@ -110,6 +111,7 @@ const BadgeEventSchema = BaseEventSchema.extend({
     color: z.string(),
     text_color: z.string(),
     size: z.number(),
+    font: z.string().optional(),
 });
 
 const StackItemSchema = z.object({
@@ -118,6 +120,7 @@ const StackItemSchema = z.object({
     animate: z.string().nullable().optional(),
     animate_frames: z.number().int().nonnegative().optional(),
     color: z.string().optional(),
+    font: z.string().nullable().optional(),
     font_size: z.number().optional(),
     align: z.enum(["left", "center", "right"]).optional(),
     start_frame: z.number().int().nonnegative(),

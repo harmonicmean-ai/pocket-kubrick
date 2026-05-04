@@ -1,5 +1,6 @@
 import React from "react";
 import { applyAnimation } from "../util/animations";
+import { resolveFontFamily } from "../util/fonts";
 import type { StackEvent, StackItem } from "../util/types";
 
 
@@ -94,7 +95,7 @@ function getItemStyle(item: StackItem): React.CSSProperties {
 
     return {
         color: item.color ?? "#FFFFFF",
-        fontFamily: "Open Sans, sans-serif",
+        fontFamily: resolveFontFamily(item.font),
         textAlign: (item.align as React.CSSProperties["textAlign"]) ?? "left",
         whiteSpace: "pre-wrap",
         ...preset,

@@ -1,5 +1,6 @@
 import React from "react";
 import { applyAnimation } from "../util/animations";
+import { resolveFontFamily } from "../util/fonts";
 import type { BadgeEvent } from "../util/types";
 
 
@@ -31,7 +32,7 @@ export const Badge: React.FC<BadgeProps> = ({ event, frame, fps }) => {
         justifyContent: "center",
         fontSize: event.size * 0.55,
         fontWeight: "bold",
-        fontFamily: "Open Sans, sans-serif",
+        fontFamily: resolveFontFamily(event.font),
         padding: isCircle ? 0 : "0 12px",
         opacity: anim.opacity,
         transform: anim.transform,
