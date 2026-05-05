@@ -55,6 +55,40 @@ function themeFont(theme: ThemeLike): string {
     return `${primary}, sans-serif`;
 }
 
+
+/**
+ * Pick a font-family for an SVG element. If the visual specifies an explicit
+ * `font:` field, use it; otherwise fall back to the theme's font.
+ */
+function resolveElementFont(elementFont: unknown, theme: ThemeLike): string {
+    if (typeof elementFont === "string" && elementFont.trim().length > 0) {
+        const name = elementFont.trim();
+        const primary = name.includes(" ") ? `'${name}'` : name;
+        return `${primary}, sans-serif`;
+    }
+    return themeFont(theme);
+}
+
+
+/**
+ * Convert a possibly-multiline string into the body of an SVG `<text>` element.
+ * Single-line strings are returned escaped as-is; multi-line strings become a
+ * series of `<tspan>` elements with `x` reset to the parent's left edge and
+ * `dy="1.2em"` between lines.
+ */
+function multilineTspans(content: string, anchorX: number): string {
+    const lines = content.split("\n");
+    if (lines.length === 1) {
+        return escapeXml(content);
+    }
+    return lines
+        .map((line, i) => {
+            const dy = i === 0 ? "0" : "1.2em";
+            return `<tspan x="${anchorX}" dy="${dy}">${escapeXml(line)}</tspan>`;
+        })
+        .join("");
+}
+
 function escapeXml(str: unknown): string {
     return String(str)
         .replace(/&/g, "&amp;")
@@ -181,9 +215,10 @@ function renderBadge(props: Record<string, unknown>, theme: ThemeLike): string {
     }
 
     const fontSize = size * 0.8;
+    const fontFamily = resolveElementFont(props.font, theme);
     parts.push(
         `<text x="${pos.x}" y="${pos.y}" text-anchor="middle" dominant-baseline="central" ` +
-        `fill="${textColor}" font-size="${fontSize}" font-family="${themeFont(theme)}">` +
+        `fill="${textColor}" font-size="${fontSize}" font-family="${fontFamily}">` +
         `${escapeXml(content)}</text>`
     );
 
@@ -271,6 +306,7 @@ function renderText(props: Record<string, unknown>, theme: ThemeLike): string {
     const fontWeight = preset.fontWeight;
     const align = (props.align as string) ?? "left";
     const color = resolveColor(props.color ?? "#FFFFFF", theme) ?? "#FFFFFF";
+    const fontFamily = resolveElementFont(props.font, theme);
 
     const anchorMap: Record<string, string> = { left: "start", center: "middle", right: "end" };
     const textAnchor = anchorMap[align] ?? "start";
@@ -281,8 +317,8 @@ function renderText(props: Record<string, unknown>, theme: ThemeLike): string {
 
     return `<text x="${pos.x}" y="${pos.y}" text-anchor="${textAnchor}" dominant-baseline="hanging" ` +
         `fill="${color}" font-size="${fontSize}" font-weight="${fontWeight}" ` +
-        `font-family="${themeFont(theme)}"${transform}>` +
-        `${escapeXml(content)}</text>`;
+        `font-family="${fontFamily}"${transform}>` +
+        `${multilineTspans(content, pos.x)}</text>`;
 }
 
 function renderStack(props: Record<string, unknown>, theme: ThemeLike): string {
@@ -293,6 +329,9 @@ function renderStack(props: Record<string, unknown>, theme: ThemeLike): string {
     if (!items || items.length === 0) return "";
 
     const gap = (props.gap as number) ?? 40;
+    // Line-height factor used by multilineTspans (`dy="1.2em"`); applied here
+    // so the next stack item starts below all of the previous item's lines.
+    const LINE_HEIGHT_EM: number = 1.2;
     const parts: string[] = [];
     let yOffset = 0;
 
@@ -303,15 +342,18 @@ function renderStack(props: Record<string, unknown>, theme: ThemeLike): string {
         const fontSize = (item.font_size as number) ?? preset.fontSize;
         const fontWeight = preset.fontWeight;
         const color = resolveColor(item.color ?? "#FFFFFF", theme) ?? "#FFFFFF";
+        const fontFamily = resolveElementFont(item.font, theme);
+        const lineCount = content.split("\n").length;
 
         parts.push(
             `<text x="${pos.x}" y="${pos.y + yOffset}" text-anchor="start" dominant-baseline="hanging" ` +
             `fill="${color}" font-size="${fontSize}" font-weight="${fontWeight}" ` +
-            `font-family="${themeFont(theme)}">` +
-            `${escapeXml(content)}</text>`
+            `font-family="${fontFamily}">` +
+            `${multilineTspans(content, pos.x)}</text>`
         );
 
-        yOffset += fontSize + gap;
+        const itemHeight = fontSize + Math.max(0, lineCount - 1) * fontSize * LINE_HEIGHT_EM;
+        yOffset += itemHeight + gap;
     }
 
     return parts.join("");
