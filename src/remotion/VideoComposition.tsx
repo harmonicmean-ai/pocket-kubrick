@@ -1,16 +1,19 @@
 import React from "react";
 import { AbsoluteFill, Audio, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { SceneContainer } from "./components/SceneContainer";
+import { FontStyles } from "./components/FontStyles";
+import type { FontEntry } from "./components/FontStyles";
 import { EventRenderer } from "./util/event-renderer";
 import type { Timeline, TimelineScene, TimelineEvent } from "./util/types";
 
 
 interface VideoCompositionProps {
     timeline: Timeline;
+    fonts?: FontEntry[];
 }
 
 
-export const VideoComposition: React.FC<VideoCompositionProps> = ({ timeline }) => {
+export const VideoComposition: React.FC<VideoCompositionProps> = ({ timeline, fonts = [] }) => {
     const frame: number = useCurrentFrame();
     const { fps } = useVideoConfig();
 
@@ -52,6 +55,9 @@ export const VideoComposition: React.FC<VideoCompositionProps> = ({ timeline }) 
 
     return (
         <AbsoluteFill style={{ backgroundColor: timeline.video.title ? "#000000" : "#121212" }}>
+            {/* Self-hosted fonts (no-op when fonts is empty) */}
+            <FontStyles fonts={fonts} />
+
             {/* Background layer */}
             <AbsoluteFill style={{ backgroundColor: "#121212" }} />
 

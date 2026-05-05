@@ -98,9 +98,16 @@ function buildTimedWordList(
 
         for (let wordIdx = 0; wordIdx < alignment.words.length; wordIdx++) {
             const word: string = alignment.words[wordIdx];
+            const normalized: string = stripPunctuation(word).toLowerCase();
+            // Inworld sometimes returns standalone whitespace or empty-string
+            // tokens between real words. Skip them so multi-word anchor
+            // phrases can still match a contiguous sequence of real words.
+            if (normalized.length === 0) {
+                continue;
+            }
             timedWords.push({
                 text: word,
-                normalized: stripPunctuation(word).toLowerCase(),
+                normalized,
                 absoluteStart: offset + alignment.wordStartTimeSeconds[wordIdx],
                 absoluteEnd: offset + alignment.wordEndTimeSeconds[wordIdx],
             });

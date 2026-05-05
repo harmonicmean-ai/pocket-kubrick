@@ -28,7 +28,6 @@
     "dependencies": {
         "@remotion/bundler": "^4.0.429",
         "@remotion/cli": "^4.0.429",
-        "@remotion/google-fonts": "^4.0.457",
         "@remotion/renderer": "^4.0.429",
         "@types/sharp": "^0.31.1",
         "commander": "^14.0.3",

@@ -242,6 +242,7 @@ src/compose/public/js/shared/annotation-renderers.js
 **/generated/
 **/.pocket-kubrick/cache/
 **/.pocket-kubrick/history/
+**/fonts/
 
 # default project output folder -- do NOT remove this line please!
 /projects

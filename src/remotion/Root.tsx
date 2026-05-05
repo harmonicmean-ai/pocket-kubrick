@@ -16,6 +16,7 @@ export const RemotionRoot: React.FC = () => {
                 height={1080}
                 defaultProps={{
                     timeline: null as unknown as Timeline,
+                    fonts: [],
                 }}
                 calculateMetadata={async ({ props }) => {
                     const timeline = (props as { timeline: Timeline | null }).timeline;

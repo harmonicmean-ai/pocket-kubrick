@@ -55,6 +55,50 @@ pocket-kubrick build --project my-video-project
 - **[CLI Cheat Sheet](DOCS/CLI%20Cheat%20Sheet.md)** — Quick command reference for every stage of the pipeline (`init`, `validate`, `convert`, `synthesize`, `resolve`, `render`, `build`, `compose`, etc.).
 
 
+## Fonts
+
+Text and stack visuals accept an optional `font:` field, in addition to the existing `font_size:`. Example:
+
+```yaml
+- type: stack
+  position: { x: 100, y: 280 }
+  items:
+    - content: "Big Bold Title"
+      style: title
+      font: Jura
+      font_size: 110
+      color: $accent
+    - content: "Smaller subtitle"
+      style: caption
+      font: Jura
+      font_size: 56
+```
+
+Fonts are **self-hosted, on demand**:
+
+- The `render` stage scans the timeline for every `font:` value (plus the implicit default `Open Sans`).
+- For each family not already cached, it hits the Google Fonts CSS API, picks the **latin** subset, and writes one woff2 per weight (default: `400` and `700`) into `<projectRoot>/fonts/<slug>/`. A small `manifest.json` records what was downloaded so subsequent runs skip the network entirely.
+- The Remotion composition gets the manifest as an input prop and injects `@font-face` rules pointing at `staticFile()` URLs. No CDN traffic at render time, no per-worker fetch storms, no "120 network requests" warnings.
+
+If a YAML references a family with a typo or one not on Google Fonts, the render fails at the font-ensure step with an explicit error before bundling.
+
+The `fonts/` directory is gitignored by default — it's a regenerable cache, not source.
+
+
+## Sharing Assets Across Projects
+
+Remotion's static directory is `publicDir: projectRoot`, so `staticFile()` only serves files under the *current project's* root. Files like `000-waves.jpg` that you'd want to reuse across multiple projects can't be referenced from a sibling location directly.
+
+**The simple fix:** put the shared asset in a directory above your projects (e.g. `<repo>/shared-assets/screenshots/000-waves.jpg`), then symlink it into each project's `inbox/assets/screenshots/`:
+
+```bash
+ln -s ../../../../shared-assets/screenshots/000-waves.jpg \
+      projects/my-video/inbox/assets/screenshots/000-waves.jpg
+```
+
+The symlinked path appears under `projectRoot`, so existing `src: screenshots/000-waves.jpg` references keep working unchanged and Remotion's bundler picks the file up via the symlink.
+
+
 ## Prerequisites
 
 - Node.js 20+
