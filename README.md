@@ -84,6 +84,16 @@ If a YAML references a family with a typo or one not on Google Fonts, the render
 
 The `fonts/` directory is gitignored by default — it's a regenerable cache, not source.
 
+### Heads-up: install fonts system-wide too if you use `keyframes`
+
+`render`, `preview` (Remotion Studio), and `compose` all render text inside a browser engine that understands `@font-face`, so the woff2 cache covers them.
+
+The `keyframes` command is different — it produces PNGs via Sharp → librsvg → fontconfig, which **only sees fonts installed at the OS level**. The woff2 files in `<projectRoot>/fonts/` are invisible to it.
+
+If you reference a custom font like `Jura` in your YAML and don't install it system-wide, your *rendered video and Studio preview will look correct*, but `keyframes` PNGs will silently fall back to a generic system sans-serif. The SVG `font-family` attribute will be right, you just won't see the actual glyphs.
+
+**Fix:** install each non-system font on your machine. On macOS: download the TTF from [Google Fonts](https://fonts.google.com/), double-click, hit Install (or drop into `~/Library/Fonts/`). One-time setup per font, per machine. Subsequent `keyframes` runs pick it up via fontconfig.
+
 
 ## Sharing Assets Across Projects
 

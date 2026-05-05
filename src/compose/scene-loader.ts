@@ -1,5 +1,6 @@
 import { resolveAssetPath } from "../util/fs-helpers.js";
 import { sceneLabel } from "../util/scene-label.js";
+import { collectFontsFromConfig } from "../util/font-collector.js";
 import type { VideoConfig } from "../schema/types.js";
 
 
@@ -52,6 +53,7 @@ export interface EditorProject {
         font_size: number;
         padding: number;
     };
+    fonts: string[];
     sceneCount: number;
 }
 
@@ -71,6 +73,7 @@ export function extractProjectData(config: VideoConfig): EditorProject {
             font_size: config.video.theme.font_size,
             padding: config.video.theme.padding,
         },
+        fonts: collectFontsFromConfig(config),
         sceneCount: config.scenes.length,
     };
 }
