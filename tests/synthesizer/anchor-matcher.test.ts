@@ -79,6 +79,24 @@ describe("matchAnchors", () => {
         expect(result.diagnostics.some((d) => d.severity === "warning" && d.message.includes("multiple positions"))).toBe(true);
     });
 
+    it("matches an anchor whose words straddle a hyphenated TTS token", () => {
+        // Inworld returns "multi-factor" as a single token; the anchor
+        // "multi-factor authentication" should still match.
+        const seg: InworldWordAlignment = makeAlignment(
+            ["Every", "account", "requires", "multi-factor", "authentication."],
+            [0, 0.4, 0.8, 1.2, 1.7],
+            [0.4, 0.8, 1.2, 1.7, 2.4],
+        );
+        const result = matchAnchors(
+            ["multi-factor authentication"],
+            [seg],
+            [0],
+        );
+        expect(result.matches).toHaveLength(1);
+        expect(result.matches[0].timeSeconds).toBeCloseTo(1.2, 2);
+        expect(result.diagnostics.filter((d) => d.severity === "error")).toHaveLength(0);
+    });
+
     it("matches across segment boundaries with offsets", () => {
         const seg1: InworldWordAlignment = makeAlignment(
             ["Hello", "world."],

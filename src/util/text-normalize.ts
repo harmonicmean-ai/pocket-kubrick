@@ -1,10 +1,12 @@
 /**
- * Normalize an anchor string for text matching.
- * Converts hyphens to spaces, lowercases, and trims.
- * E.g. "settings-icon" -> "settings icon"
+ * Normalize a string for anchor/script matching. Lowercases and replaces every
+ * run of non-letter, non-digit characters with a single space, then trims.
+ * Applied symmetrically to anchors, script text, and TTS tokens so that
+ * hyphens, slashes, periods, etc. inside words don't break matching.
+ * E.g. "settings-icon" -> "settings icon", "multi-factor" -> "multi factor".
  */
-export function normalizeAnchor(anchor: string): string {
-    return anchor.replace(/-/g, " ").toLowerCase().trim();
+export function normalizeForMatching(s: string): string {
+    return s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
 }
 
 

@@ -6,7 +6,7 @@
  * timestamp array returned post-synthesis.
  */
 
-import { normalizeAnchor } from "../util/text-normalize.js";
+import { normalizeForMatching } from "../util/text-normalize.js";
 import type { DiagnosticMessage } from "../util/errors.js";
 import type { InworldWordAlignment, AnchorTimepoint } from "./types.js";
 
@@ -45,7 +45,7 @@ export function matchAnchors(
     const timedWords: TimedWord[] = buildTimedWordList(wordAlignments, segmentTimeOffsets);
 
     for (const anchor of anchors) {
-        const anchorNorm: string = normalizeAnchor(anchor);
+        const anchorNorm: string = normalizeForMatching(anchor);
         const anchorWords: string[] = anchorNorm.split(/\s+/).filter((w) => w.length > 0);
 
         if (anchorWords.length === 0) {
@@ -98,19 +98,28 @@ function buildTimedWordList(
 
         for (let wordIdx = 0; wordIdx < alignment.words.length; wordIdx++) {
             const word: string = alignment.words[wordIdx];
-            const normalized: string = stripPunctuation(word).toLowerCase();
+            const normalized: string = normalizeForMatching(word);
             // Inworld sometimes returns standalone whitespace or empty-string
             // tokens between real words. Skip them so multi-word anchor
             // phrases can still match a contiguous sequence of real words.
             if (normalized.length === 0) {
                 continue;
             }
-            timedWords.push({
-                text: word,
-                normalized,
-                absoluteStart: offset + alignment.wordStartTimeSeconds[wordIdx],
-                absoluteEnd: offset + alignment.wordEndTimeSeconds[wordIdx],
-            });
+            // A single Inworld token may contain internal punctuation
+            // (e.g. "multi-factor"); split into sub-tokens that share the
+            // original word's start/end so anchors like "multi-factor
+            // authentication" still match.
+            const subTokens: string[] = normalized.split(/\s+/);
+            const absoluteStart: number = offset + alignment.wordStartTimeSeconds[wordIdx];
+            const absoluteEnd: number = offset + alignment.wordEndTimeSeconds[wordIdx];
+            for (const sub of subTokens) {
+                timedWords.push({
+                    text: word,
+                    normalized: sub,
+                    absoluteStart,
+                    absoluteEnd,
+                });
+            }
         }
     }
 
@@ -148,17 +157,6 @@ function findAnchorInWords(
 }
 
 
-/**
- * Compare a TTS word (already stripped/lowered) against an anchor word.
- */
 function wordsMatch(ttsWord: string, anchorWord: string): boolean {
     return ttsWord === anchorWord;
-}
-
-
-/**
- * Strip leading and trailing punctuation from a word.
- */
-function stripPunctuation(word: string): string {
-    return word.replace(/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/g, "");
 }
