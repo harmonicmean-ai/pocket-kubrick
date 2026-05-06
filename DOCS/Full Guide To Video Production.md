@@ -120,6 +120,22 @@ If the alias starts and ends with `/`, it's treated as IPA. Otherwise it's wrapp
 
 **`[pitch VALUE]...[/pitch]`** -- deprecated, has no effect with Inworld. Content is preserved but the validator will warn you to remove it.
 
+##### What kubrick recognizes (and what transcripts strip)
+
+Kubrick rewrites only the directives listed above. The full set:
+
+| Directive | Effect on TTS | Effect on transcript |
+| --- | --- | --- |
+| `[pause DURATION]` | inserts silence between segments | removed; surrounding text stays in one paragraph |
+| `[voice NAME]...[/voice]` | switches voice for the enclosed text | markers removed; content kept and attributed to the named speaker |
+| `[rate VALUE]...[/rate]` | adjusts speaking rate | markers removed; content kept verbatim |
+| `[say-as characters\|spell-out]...[/say-as]` | spelled out letter-by-letter | content also spelled out (e.g., `URL` -> `U R L`) |
+| `[say-as date\|ordinal\|...]...[/say-as]` | passed to Inworld text normalization | markers removed; content kept verbatim |
+| `[sub ALIAS]...[/sub]` | content replaced with `/ALIAS/` (IPA hint) | original visible content kept; alias is dropped |
+| `[pitch VALUE]...[/pitch]` | no effect (deprecated, validator warns) | markers removed; content kept verbatim |
+
+Anything else inside square brackets is **not** interpreted -- it passes through to the markdown parser and may end up sent to Inworld verbatim, mangled (if it looks like a markdown link reference), or stripped (if it parses as a link). Inworld's TTS markup may grow over time; check Inworld's docs for the current set, and if you start using a directive kubrick doesn't recognize, file an issue or add it to `src/converter/bracket-directives.ts`.
+
 #### Anchor phrases
 
 Anchor phrases connect visual events to exact moments in the narration. In `video-config.yaml`, a visual's `at:` field contains a phrase that must appear verbatim in the script:
