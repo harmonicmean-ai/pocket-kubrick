@@ -10,6 +10,22 @@ import { stampAnnotations } from "../util/annotation-stamper.js";
 import type { VideoConfig, Theme, Scene } from "../schema/types.js";
 
 
+/** Parse a CSS hex color (e.g. "#121212") into Sharp RGBA. Falls back to dark grey. */
+function parseHexBackground(hex: string): { r: number; g: number; b: number; alpha: number } {
+    const cleaned: string = hex.startsWith("#") ? hex.slice(1) : hex;
+    if (cleaned.length === 6 || cleaned.length === 8) {
+        const r: number = parseInt(cleaned.slice(0, 2), 16);
+        const g: number = parseInt(cleaned.slice(2, 4), 16);
+        const b: number = parseInt(cleaned.slice(4, 6), 16);
+        const alpha: number = cleaned.length === 8 ? parseInt(cleaned.slice(6, 8), 16) / 255 : 1;
+        if (!Number.isNaN(r) && !Number.isNaN(g) && !Number.isNaN(b)) {
+            return { r, g, b, alpha };
+        }
+    }
+    return { r: 18, g: 18, b: 18, alpha: 1 };
+}
+
+
 /** Annotation types that are meaningful as static stamps on a screenshot. */
 // TODO: disappear_at is not handled here — keyframe states operate on raw YAML
 // (pre-audio-synthesis) so anchor names can't be resolved to temporal order.
@@ -253,19 +269,21 @@ async function compositeScreenshotLayers(
     layers: ScreenshotLayer[],
     videoWidth: number,
     videoHeight: number,
+    backgroundColor: string,
 ): Promise<sharp.Sharp> {
     if (layers.length === 1 && !layers[0].position && !layers[0].size) {
         // Single full-frame screenshot — no compositing needed
         return sharp(layers[0].path).resize(videoWidth, videoHeight, { fit: "contain" });
     }
 
-    // Start with a blank canvas at video resolution
+    // Start with a blank canvas at video resolution using the theme background
+    const bgRgba: { r: number; g: number; b: number; alpha: number } = parseHexBackground(backgroundColor);
     let base: sharp.Sharp = sharp({
         create: {
             width: videoWidth,
             height: videoHeight,
             channels: 4,
-            background: { r: 18, g: 18, b: 18, alpha: 1 },  // #121212
+            background: bgRgba,
         },
     }).png();
 
@@ -421,7 +439,7 @@ export async function runKeyframes(
 
             // Build composited base image from all screenshot layers
             const baseImage: sharp.Sharp = await compositeScreenshotLayers(
-                state.screenshotLayers, videoWidth, videoHeight,
+                state.screenshotLayers, videoWidth, videoHeight, theme.background,
             );
 
             if (state.annotations.length === 0) {

@@ -1,5 +1,6 @@
 import React from "react";
 import { applyAnimation } from "../util/animations";
+import { fontFamily, useTheme } from "../util/theme-context";
 import type { TextEvent } from "../util/types";
 
 
@@ -39,6 +40,7 @@ const STYLE_PRESETS: Record<string, React.CSSProperties> = {
 
 
 export const TextOverlay: React.FC<TextOverlayProps> = ({ event, frame, fps }) => {
+    const theme = useTheme();
     const anim = applyAnimation(event.animate, frame, fps, event.animate_frames);
     const presetStyle: React.CSSProperties = STYLE_PRESETS[event.style] ?? STYLE_PRESETS.caption;
 
@@ -52,7 +54,7 @@ export const TextOverlay: React.FC<TextOverlayProps> = ({ event, frame, fps }) =
         opacity: anim.opacity,
         zIndex: event.z_index,
         color: event.color ?? "#FFFFFF",
-        fontFamily: "Open Sans, sans-serif",
+        fontFamily: fontFamily(theme),
         textAlign: event.align ?? "left",
         whiteSpace: "pre-wrap",
         ...presetStyle,

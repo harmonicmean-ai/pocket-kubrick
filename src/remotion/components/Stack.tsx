@@ -1,6 +1,7 @@
 import React from "react";
 import { applyAnimation } from "../util/animations";
-import type { StackEvent, StackItem } from "../util/types";
+import { fontFamily, useTheme } from "../util/theme-context";
+import type { StackEvent, StackItem, TimelineTheme } from "../util/types";
 
 
 interface StackProps {
@@ -37,6 +38,7 @@ const STYLE_PRESETS: Record<string, React.CSSProperties> = {
 
 
 export const Stack: React.FC<StackProps> = ({ event, frame, fps }) => {
+    const theme = useTheme();
     // Container animation applies to the whole stack
     const containerAnim = applyAnimation(event.animate, frame, fps, event.animate_frames);
 
@@ -60,7 +62,7 @@ export const Stack: React.FC<StackProps> = ({ event, frame, fps }) => {
                 if (absoluteFrame < item.start_frame || absoluteFrame > item.end_frame) {
                     // Reserve space but keep invisible to maintain layout stability
                     return (
-                        <div key={index} style={{ ...getItemStyle(item), opacity: 0 }} />
+                        <div key={index} style={{ ...getItemStyle(item, theme), opacity: 0 }} />
                     );
                 }
 
@@ -73,7 +75,7 @@ export const Stack: React.FC<StackProps> = ({ event, frame, fps }) => {
                 );
 
                 const style: React.CSSProperties = {
-                    ...getItemStyle(item),
+                    ...getItemStyle(item, theme),
                     opacity: itemAnim.opacity,
                     transform: itemAnim.transform,
                 };
@@ -89,12 +91,12 @@ export const Stack: React.FC<StackProps> = ({ event, frame, fps }) => {
 };
 
 
-function getItemStyle(item: StackItem): React.CSSProperties {
+function getItemStyle(item: StackItem, theme: TimelineTheme | null): React.CSSProperties {
     const preset: React.CSSProperties = STYLE_PRESETS[item.style ?? "caption"] ?? STYLE_PRESETS.caption;
 
     return {
         color: item.color ?? "#FFFFFF",
-        fontFamily: "Open Sans, sans-serif",
+        fontFamily: fontFamily(theme),
         textAlign: (item.align as React.CSSProperties["textAlign"]) ?? "left",
         whiteSpace: "pre-wrap",
         ...preset,

@@ -1,5 +1,6 @@
 import React from "react";
 import { applyAnimation } from "../util/animations";
+import { fontFamily, useTheme } from "../util/theme-context";
 import type { BadgeEvent } from "../util/types";
 
 
@@ -11,6 +12,7 @@ interface BadgeProps {
 
 
 export const Badge: React.FC<BadgeProps> = ({ event, frame, fps }) => {
+    const theme = useTheme();
     const anim = applyAnimation(event.animate, frame, fps, event.animate_frames);
 
     const isCircle: boolean = event.variant === "circle";
@@ -31,7 +33,7 @@ export const Badge: React.FC<BadgeProps> = ({ event, frame, fps }) => {
         justifyContent: "center",
         fontSize: event.size * 0.55,
         fontWeight: "bold",
-        fontFamily: "Open Sans, sans-serif",
+        fontFamily: fontFamily(theme),
         padding: isCircle ? 0 : "0 12px",
         opacity: anim.opacity,
         transform: anim.transform,

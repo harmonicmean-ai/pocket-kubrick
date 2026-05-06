@@ -22,11 +22,19 @@ export function initCanvas(container, w, h) {
     svg.style.userSelect = "none";
     svgElement = svg;
 
-    // Defs for filters (cursor shadow, etc.)
+    // Defs for filters (cursor shadow, badge shadow, zoom shadow).
+    // Keep this list in sync with the filter IDs referenced by
+    // src/shared/annotation-renderers.ts and src/util/annotation-stamper.ts.
     const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
     defs.innerHTML = `
         <filter id="cursorShadow" x="-50%" y="-50%" width="200%" height="200%">
             <feDropShadow dx="1" dy="2" stdDeviation="2" flood-opacity="0.5"/>
+        </filter>
+        <filter id="badgeShadow" x="-25%" y="-25%" width="150%" height="150%">
+            <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.3"/>
+        </filter>
+        <filter id="zoomShadow" x="-25%" y="-25%" width="150%" height="150%">
+            <feDropShadow dx="0" dy="4" stdDeviation="12" flood-opacity="0.5"/>
         </filter>
     `;
     svg.appendChild(defs);
