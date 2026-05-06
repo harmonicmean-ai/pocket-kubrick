@@ -1,6 +1,7 @@
 import React from "react";
 import { applyAnimation } from "../util/animations";
-import { fontFamily, useTheme } from "../util/theme-context";
+import { useTheme } from "../util/theme-context";
+import { resolveFontFamily } from "../util/fonts";
 import type { StackEvent, StackItem, TimelineTheme } from "../util/types";
 
 
@@ -96,7 +97,7 @@ function getItemStyle(item: StackItem, theme: TimelineTheme | null): React.CSSPr
 
     return {
         color: item.color ?? "#FFFFFF",
-        fontFamily: fontFamily(theme),
+        fontFamily: resolveFontFamily(item.font ?? theme?.font ?? null),
         textAlign: (item.align as React.CSSProperties["textAlign"]) ?? "left",
         whiteSpace: "pre-wrap",
         ...preset,

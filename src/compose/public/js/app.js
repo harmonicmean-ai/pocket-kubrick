@@ -277,8 +277,10 @@ async function init() {
     document.getElementById("project-title").textContent = state.project.title;
     document.title = `Compose - ${state.project.title}`;
 
-    // Load theme font from Google Fonts
-    loadThemeFont(state.project.theme?.font);
+    // Load every font family referenced by the config (theme + per-element
+    // `font:` overrides) from Google Fonts so the canvas previews them
+    // properly. Falls back to a generic sans-serif for unknown families.
+    loadGoogleFonts(state.project.fonts ?? [state.project.theme?.font].filter(Boolean));
 
     // Initialize canvas
     initCanvas(
@@ -478,17 +480,25 @@ function resolvePercentageProps(props) {
 
 
 /**
- * Load a Google Font by injecting a stylesheet link into the document head.
- * No-op for generic families like "sans-serif" or "monospace".
+ * Load one or more Google Fonts by injecting stylesheet links into the
+ * document head. Generic families like "sans-serif" are skipped. Duplicates
+ * are deduped. Failures are silent -- unknown families just fall back to
+ * the browser's default sans-serif.
  */
-function loadThemeFont(fontName) {
-    if (!fontName || /^(sans-serif|serif|monospace|cursive|fantasy)$/i.test(fontName)) {
-        return;
+function loadGoogleFonts(fontNames) {
+    const seen = new Set();
+    const generics = /^(sans-serif|serif|monospace|cursive|fantasy)$/i;
+    for (const name of fontNames) {
+        if (!name || generics.test(name)) continue;
+        const trimmed = name.trim();
+        if (seen.has(trimmed)) continue;
+        seen.add(trimmed);
+
+        const family = encodeURIComponent(trimmed).replace(/%20/g, "+");
+        const href = `https://fonts.googleapis.com/css2?family=${family}:wght@400;500;600;700&display=swap`;
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = href;
+        document.head.appendChild(link);
     }
-    const family = encodeURIComponent(fontName);
-    const href = `https://fonts.googleapis.com/css2?family=${family}:wght@400;500;600;700&display=swap`;
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = href;
-    document.head.appendChild(link);
 }

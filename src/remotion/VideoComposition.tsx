@@ -1,6 +1,8 @@
 import React from "react";
 import { AbsoluteFill, Audio, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { SceneContainer } from "./components/SceneContainer";
+import { FontStyles } from "./components/FontStyles";
+import type { FontEntry } from "./components/FontStyles";
 import { EventRenderer } from "./util/event-renderer";
 import { ThemeContext } from "./util/theme-context";
 import type { Timeline, TimelineScene, TimelineEvent, TimelineTheme } from "./util/types";
@@ -20,10 +22,11 @@ const DEFAULT_THEME: TimelineTheme = {
 
 interface VideoCompositionProps {
     timeline: Timeline;
+    fonts?: FontEntry[];
 }
 
 
-export const VideoComposition: React.FC<VideoCompositionProps> = ({ timeline }) => {
+export const VideoComposition: React.FC<VideoCompositionProps> = ({ timeline, fonts = [] }) => {
     const frame: number = useCurrentFrame();
     const { fps } = useVideoConfig();
 
@@ -68,6 +71,9 @@ export const VideoComposition: React.FC<VideoCompositionProps> = ({ timeline }) 
     return (
         <ThemeContext.Provider value={theme}>
             <AbsoluteFill style={{ backgroundColor: theme.background }}>
+                {/* Self-hosted fonts (no-op when fonts is empty) */}
+                <FontStyles fonts={fonts} />
+
                 {/* Background layer */}
                 <AbsoluteFill style={{ backgroundColor: theme.background }} />
 

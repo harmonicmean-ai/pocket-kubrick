@@ -343,15 +343,25 @@ visuals:
 
 | Field       | Type   | Default     | Notes                                |
 |-------------|--------|-------------|--------------------------------------|
-| `content`   | string | (required)  | Text to display                      |
+| `content`   | string | (required)  | Text to display. Embedded `\n` becomes a line break. |
 | `style`     | string | `"caption"` | `title`, `caption`, `callout`, `label` |
 | `animate`   | string | (none)      | Animation for this item              |
 | `at`        | string | (none)      | Anchor phrase for staggered reveal   |
 | `color`     | string | `"#FFFFFF"` | Text color (supports `$variable` refs) |
+| `font`      | string | (theme `font`) | Per-item font family override (e.g. `Jura`). See [Fonts](#fonts) below. |
 | `font_size` | number | (none)      | Override the style preset's font size |
 | `align`     | string | `"left"`    | `left`, `center`, `right`            |
 
 Items that haven't reached their `at` timestamp are hidden but still reserve layout space, so later items don't jump when earlier ones appear.
+
+For multi-line content, embed `\n` directly in the YAML string (use a double-quoted scalar so YAML preserves the escape):
+
+```yaml
+- content: "Processing Punch Lists And\nField Observation Reports"
+  style: title
+  font: Jura
+  font_size: 110
+```
 
 #### The `arrow` visual type
 
@@ -396,6 +406,34 @@ Either `from`+`to` or `position` is required. If `position` is provided, `from` 
 ### Complete example
 
 See the working project at `projects/how-to-configure-notifications/video-config.yaml` for a real-world three-scene configuration.
+
+
+## Fonts
+
+Three places accept an optional `font:` field:
+
+- the global `video.theme.font` (applies wherever no override is given),
+- per-element on `text` and `badge` visuals,
+- per-item on `stack` items.
+
+If a `font:` is omitted, the theme font is used; the default theme font is `Open Sans`.
+
+### How fonts are loaded
+
+**Renders, Studio preview, and the compose editor** load fonts from a real font face — woff2 files for `render`/`preview` (self-hosted from the project's `fonts/` directory), and Google Fonts CDN for `compose`. They all see the right glyphs.
+
+The first time a `render` or `preview` runs and encounters a new family, it hits the Google Fonts CSS API, picks the **latin** subset, and writes one woff2 per weight (default: `400` and `700`) into `<projectRoot>/fonts/<slug>/`. A `manifest.json` next to the woff2 files records what was downloaded so subsequent runs skip the network. The `fonts/` directory is gitignored — it's a regenerable cache, not source.
+
+If a YAML names a family with a typo or one Google Fonts doesn't carry, the run fails at the font-ensure step with an explicit error before any work is done. To use a paid or in-house font Google Fonts can't supply, drop the woff2 into `<projectRoot>/fonts/<slug>/<slug>-<weight>.woff2` manually and write a matching `manifest.json` like `{ "family": "MyFont", "weights": [{ "weight": "400", "src": "fonts/myfont/myfont-400.woff2" }] }` — pocket-kubrick treats it as already cached.
+
+### Heads-up: install fonts system-wide for `keyframes`
+
+The `keyframes` command does **not** use the woff2 cache. It produces PNGs through Sharp → librsvg → fontconfig, which only sees fonts installed at the OS level. So if your video uses a custom font like `Jura`:
+
+- `render`, `preview`, and `compose` will display it correctly without any extra setup (the project's `fonts/` directory covers them).
+- `keyframes` will silently fall back to a generic system sans-serif. The SVG will carry the right `font-family="Jura"` attribute, you just won't see Jura's actual glyphs in the PNG.
+
+**Fix:** install each non-system font on each machine that runs `keyframes`. On macOS, download the TTF from [fonts.google.com](https://fonts.google.com/), double-click the file, and click *Install Font* (or drop it into `~/Library/Fonts/`). One-time setup per font, per machine. Re-run `keyframes` after installing.
 
 
 ## Running the Pipeline

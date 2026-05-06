@@ -426,6 +426,7 @@ function resolveStackItems(
             animate: item.animate ?? null,
             animate_frames: itemAnimFrames,
             color: item.color ?? "#FFFFFF",
+            font: item.font ?? null,
             font_size: item.font_size ?? null,
             align: item.align ?? null,
             start_frame: itemStartFrame,

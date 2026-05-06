@@ -55,6 +55,21 @@ function themeFont(theme: ThemeLike): string {
     return `${primary}, sans-serif`;
 }
 
+
+/**
+ * Pick a font-family for an SVG element. If the visual specifies an explicit
+ * `font:` field, use it; otherwise fall back to the theme's font.
+ */
+function resolveElementFont(elementFont: unknown, theme: ThemeLike): string {
+    if (typeof elementFont === "string" && elementFont.trim().length > 0) {
+        const name = elementFont.trim();
+        const primary = name.includes(" ") ? `'${name}'` : name;
+        return `${primary}, sans-serif`;
+    }
+    return themeFont(theme);
+}
+
+
 function escapeXml(str: unknown): string {
     return String(str)
         .replace(/&/g, "&amp;")
@@ -187,7 +202,8 @@ function renderBadge(props: Record<string, unknown>, theme: ThemeLike): string {
 
     parts.push(
         `<text x="${pos.x}" y="${pos.y}" text-anchor="middle" dominant-baseline="central" ` +
-        `fill="${textColor}" font-size="${fontSize}" font-weight="bold" font-family="${themeFont(theme)}">` +
+        `fill="${textColor}" font-size="${fontSize}" font-weight="bold" ` +
+        `font-family="${resolveElementFont(props.font, theme)}">` +
         `${escapeXml(content)}</text>`
     );
 
@@ -422,6 +438,7 @@ function renderText(props: Record<string, unknown>, theme: ThemeLike): string {
     const fontWeight = preset.fontWeight;
     const align = (props.align as string) ?? "left";
     const color = resolveColor(props.color ?? "#FFFFFF", theme) ?? "#FFFFFF";
+    const fontFamily = resolveElementFont(props.font, theme);
 
     const { textAnchor, widthAnchor } = alignToAnchor(align);
     const styleAttr = styleTransform(preset);
@@ -448,7 +465,7 @@ function renderText(props: Record<string, unknown>, theme: ThemeLike): string {
 
     const textElement = `<text x="${textX}" y="${textY}" text-anchor="${textAnchor}" dominant-baseline="hanging" ` +
         `fill="${color}" font-size="${fontSize}" font-weight="${fontWeight}" ` +
-        `font-family="${themeFont(theme)}"${styleAttr}>` +
+        `font-family="${fontFamily}"${styleAttr}>` +
         `${tspans}</text>`;
 
     return bgRect + textElement;
@@ -474,6 +491,7 @@ function renderStack(props: Record<string, unknown>, theme: ThemeLike): string {
         const fontWeight = preset.fontWeight;
         const align = (item.align as string) ?? "left";
         const color = resolveColor(item.color ?? "#FFFFFF", theme) ?? "#FFFFFF";
+        const fontFamily = resolveElementFont(item.font, theme);
 
         const { textAnchor, widthAnchor } = alignToAnchor(align);
         const styleAttr = styleTransform(preset);
@@ -502,7 +520,7 @@ function renderStack(props: Record<string, unknown>, theme: ThemeLike): string {
         parts.push(
             `<text x="${textX}" y="${textY}" text-anchor="${textAnchor}" dominant-baseline="hanging" ` +
             `fill="${color}" font-size="${fontSize}" font-weight="${fontWeight}" ` +
-            `font-family="${themeFont(theme)}"${styleAttr}>` +
+            `font-family="${fontFamily}"${styleAttr}>` +
             `${tspans}</text>`
         );
 
