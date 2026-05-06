@@ -27,6 +27,12 @@ export interface ScriptSegment {
     emotion?: string;
     /** Milliseconds of silence to insert after this segment's audio. */
     pauseAfterMs?: number;
+    /**
+     * True when the trailing pause came from an explicit [pause] directive
+     * rather than a paragraph or thematic break. Transcript output collapses
+     * these into the surrounding paragraph instead of starting a new one.
+     */
+    pauseFromDirective?: boolean;
 }
 
 

@@ -257,7 +257,26 @@ function splitIntoSegments(text: string): ScriptSegment[] {
     let currentVoice: string | undefined = undefined;
     let currentRate: number | undefined = undefined;
     let pendingPauseMs: number | undefined = undefined;
+    let pendingPauseFromDirective: boolean = false;
     let lastIndex: number = 0;
+
+    function flushPendingPauseToLast(): void {
+        if (pendingPauseMs === undefined || segments.length === 0) {
+            pendingPauseMs = undefined;
+            pendingPauseFromDirective = false;
+            return;
+        }
+        const lastSeg: ScriptSegment = segments[segments.length - 1];
+        lastSeg.pauseAfterMs = pendingPauseMs;
+        if (pendingPauseFromDirective) {
+            lastSeg.pauseFromDirective = true;
+        } else {
+            // A structural break supersedes any prior directive-pause flag.
+            delete lastSeg.pauseFromDirective;
+        }
+        pendingPauseMs = undefined;
+        pendingPauseFromDirective = false;
+    }
 
     for (const token of allTokens) {
         // Extract text before this token
@@ -267,25 +286,21 @@ function splitIntoSegments(text: string): ScriptSegment[] {
                 const segment: ScriptSegment = { text: textBefore.trim() };
                 if (currentVoice) segment.voiceId = currentVoice;
                 if (currentRate !== undefined) segment.speakingRate = currentRate;
-                if (pendingPauseMs !== undefined) {
-                    if (segments.length > 0) {
-                        segments[segments.length - 1].pauseAfterMs = pendingPauseMs;
-                    }
-                    pendingPauseMs = undefined;
-                }
+                flushPendingPauseToLast();
                 segments.push(segment);
-            } else if (pendingPauseMs !== undefined && segments.length > 0) {
-                segments[segments.length - 1].pauseAfterMs = pendingPauseMs;
-                pendingPauseMs = undefined;
+            } else {
+                flushPendingPauseToLast();
             }
         }
 
         switch (token.type) {
             case "break":
                 pendingPauseMs = parseInt(token.value, 10);
+                pendingPauseFromDirective = false;
                 break;
             case "pause":
                 pendingPauseMs = parseFloat(token.value);
+                pendingPauseFromDirective = true;
                 break;
             case "voice_start":
                 currentVoice = token.value;
@@ -311,18 +326,13 @@ function splitIntoSegments(text: string): ScriptSegment[] {
             const segment: ScriptSegment = { text: remaining.trim() };
             if (currentVoice) segment.voiceId = currentVoice;
             if (currentRate !== undefined) segment.speakingRate = currentRate;
-            if (pendingPauseMs !== undefined && segments.length > 0) {
-                segments[segments.length - 1].pauseAfterMs = pendingPauseMs;
-                pendingPauseMs = undefined;
-            }
+            flushPendingPauseToLast();
             segments.push(segment);
         }
     }
 
     // If there's a trailing pending pause, apply to the last segment
-    if (pendingPauseMs !== undefined && segments.length > 0) {
-        segments[segments.length - 1].pauseAfterMs = pendingPauseMs;
-    }
+    flushPendingPauseToLast();
 
     return segments;
 }

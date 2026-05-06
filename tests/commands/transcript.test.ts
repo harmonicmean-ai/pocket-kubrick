@@ -41,6 +41,28 @@ describe("runTranscript", () => {
         }
     });
 
+    it("does not split a paragraph at a mid-sentence [pause] directive", () => {
+        const { config } = runValidation({ project: tempProject });
+        expect(config).not.toBeNull();
+        config!.scenes[0].script = `Hello there [pause 1s] how are you?\n\nAnd a separate paragraph.`;
+
+        runConversion(config!, tempProject);
+        const result = runTranscript(config!, tempProject);
+        expect(result.success).toBe(true);
+
+        const md: string = readFileSync(result.outputFiles[0], "utf-8");
+        // Mid-paragraph pause: text on both sides should appear in the same paragraph.
+        expect(md).toMatch(/Hello there how are you\?/);
+        // Paragraph break still produces two separate paragraphs.
+        expect(md).toContain("And a separate paragraph.");
+        const helloIdx: number = md.indexOf("Hello there how are you?");
+        const andIdx: number = md.indexOf("And a separate paragraph.");
+        expect(helloIdx).toBeGreaterThan(-1);
+        expect(andIdx).toBeGreaterThan(helloIdx);
+        // There must be a paragraph break between them in the markdown.
+        expect(md.slice(helloIdx, andIdx)).toContain("\n\n");
+    });
+
     it("prints [sub] visible content rather than the IPA substitute", () => {
         const { config } = runValidation({ project: tempProject });
         expect(config).not.toBeNull();

@@ -231,6 +231,7 @@ export function runTranscript(
     // Build transcript blocks
     const actorOrder: string[] = [];
     let currentSpeaker: string | null = null;
+    let previousPauseFromDirective: boolean = false;
     const blocks: TranscriptBlock[] = [];
 
     for (const scene of scenes) {
@@ -247,15 +248,33 @@ export function runTranscript(
                 const actorNum: string = String(actorOrder.indexOf(voiceKey) + 1).padStart(2, "0");
                 blocks.push({ type: "speaker", sceneNum, voiceKey, displayName, actorNum, text: "" });
                 currentSpeaker = voiceKey;
+                previousPauseFromDirective = false;
             }
 
             const sourceText: string = segment.transcriptText ?? segment.text;
             const trimmedText: string = sourceText.trim();
             if (trimmedText) {
                 const actorNum: string = String(actorOrder.indexOf(voiceKey) + 1).padStart(2, "0");
-                blocks.push({ type: "text", sceneNum, voiceKey, displayName, actorNum, text: trimmedText });
+                // If the previous same-speaker segment in this scene ended with an
+                // explicit [pause] directive, fold this text into that paragraph
+                // rather than starting a new one.
+                const lastBlock: TranscriptBlock | undefined = blocks[blocks.length - 1];
+                const canMerge: boolean =
+                    previousPauseFromDirective
+                    && lastBlock !== undefined
+                    && lastBlock.type === "text"
+                    && lastBlock.voiceKey === voiceKey
+                    && lastBlock.sceneNum === sceneNum;
+                if (canMerge) {
+                    lastBlock!.text = `${lastBlock!.text} ${trimmedText}`;
+                } else {
+                    blocks.push({ type: "text", sceneNum, voiceKey, displayName, actorNum, text: trimmedText });
+                }
             }
+            previousPauseFromDirective = segment.pauseFromDirective === true;
         }
+        // A scene boundary is a stronger break than any pause.
+        previousPauseFromDirective = false;
     }
 
     // Write outputs to output/ (final consumer-facing artifacts)
