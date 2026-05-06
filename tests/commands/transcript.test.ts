@@ -41,6 +41,23 @@ describe("runTranscript", () => {
         }
     });
 
+    it("prints [sub] visible content rather than the IPA substitute", () => {
+        const { config } = runValidation({ project: tempProject });
+        expect(config).not.toBeNull();
+        config!.scenes[0].script = `Bonjour, voici le [sub /lj̃ɛ/]lien[/sub].`;
+
+        runConversion(config!, tempProject);
+        const result = runTranscript(config!, tempProject);
+        expect(result.success).toBe(true);
+
+        const md: string = readFileSync(result.outputFiles[0], "utf-8");
+        expect(md).toContain("lien");
+        expect(md).not.toContain("/lj̃ɛ/");
+        const html: string = readFileSync(result.outputFiles[1], "utf-8");
+        expect(html).toContain("lien");
+        expect(html).not.toContain("/lj̃ɛ/");
+    });
+
     it("emits speaker tags with correct actor numbering in .md", () => {
         const { config } = runValidation({ project: tempProject });
         runConversion(config!, tempProject);

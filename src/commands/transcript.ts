@@ -249,7 +249,8 @@ export function runTranscript(
                 currentSpeaker = voiceKey;
             }
 
-            const trimmedText: string = segment.text.trim();
+            const sourceText: string = segment.transcriptText ?? segment.text;
+            const trimmedText: string = sourceText.trim();
             if (trimmedText) {
                 const actorNum: string = String(actorOrder.indexOf(voiceKey) + 1).padStart(2, "0");
                 blocks.push({ type: "text", sceneNum, voiceKey, displayName, actorNum, text: trimmedText });

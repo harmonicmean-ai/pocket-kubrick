@@ -86,10 +86,21 @@ export function parseRate(rateStr: string): number {
 
 
 /**
+ * Output mode for directive pre-processing.
+ * - "tts": substitute [sub ALIAS]content[/sub] with the IPA/alias form for Inworld.
+ * - "transcript": keep the original visible content for human-readable output.
+ */
+export type PreProcessMode = "tts" | "transcript";
+
+
+/**
  * Extract bracket directives from text, replacing them with placeholders.
  * Returns modified text + a map of placeholder -> token replacement.
+ *
+ * The mode parameter only affects [sub] handling; all other directives behave
+ * identically in both modes.
  */
-export function preProcessDirectives(text: string): PreProcessResult {
+export function preProcessDirectives(text: string, mode: PreProcessMode = "tts"): PreProcessResult {
     const placeholders: DirectivePlaceholder[] = [];
     const diagnostics: DiagnosticMessage[] = [];
 
@@ -151,10 +162,15 @@ export function preProcessDirectives(text: string): PreProcessResult {
         },
     );
 
-    // Handle [sub alias]...[/sub] -- replace content with IPA or alias text
+    // Handle [sub alias]...[/sub]
+    // - tts mode: replace content with IPA/alias for Inworld pronunciation
+    // - transcript mode: keep the original visible content
     text = text.replace(
         /\[sub\s+([^\]]+)\]([\s\S]*?)\[\/sub\]/g,
-        (_match: string, alias: string, _content: string) => {
+        (_match: string, alias: string, content: string) => {
+            if (mode === "transcript") {
+                return content;
+            }
             const trimmedAlias: string = alias.trim();
             // If it looks like IPA (starts with /), use Inworld IPA notation
             if (trimmedAlias.startsWith("/") && trimmedAlias.endsWith("/")) {

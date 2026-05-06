@@ -12,6 +12,7 @@
 import { unified } from "unified";
 import remarkParse from "remark-parse";
 import { preProcessDirectives, restorePlaceholders, PH_START, PH_END } from "./bracket-directives.js";
+import type { PreProcessMode } from "./bracket-directives.js";
 import {
     TOKEN_PAUSE,
     TOKEN_VOICE_START,
@@ -33,6 +34,12 @@ export interface ConvertOptions {
     paragraphBreakMs?: number;
     /** Configurable line break pause in ms. Default: 400 */
     lineBreakMs?: number;
+    /**
+     * Output mode for directive substitution. Default "tts".
+     * Use "transcript" to preserve human-readable forms (e.g., [sub] content
+     * is kept verbatim instead of being replaced with its IPA alias).
+     */
+    mode?: PreProcessMode;
 }
 
 
@@ -46,6 +53,7 @@ const DEFAULT_OPTIONS: Required<ConvertOptions> = {
     thematicBreakMs: 1000,
     paragraphBreakMs: 700,
     lineBreakMs: 400,
+    mode: "tts",
 };
 
 
@@ -69,7 +77,7 @@ export function convertMarkdownToSegments(markdown: string, options?: ConvertOpt
     const diagnostics: DiagnosticMessage[] = [];
 
     // Step 1: Pre-process bracket directives
-    const { text: preprocessed, placeholders, diagnostics: directiveDiags } = preProcessDirectives(markdown);
+    const { text: preprocessed, placeholders, diagnostics: directiveDiags } = preProcessDirectives(markdown, opts.mode);
     diagnostics.push(...directiveDiags);
 
     // Step 2: Parse with remark
