@@ -50,7 +50,7 @@ function resolveColor(value: unknown, theme: ThemeLike): unknown {
 }
 
 function themeFont(theme: ThemeLike): string {
-    const font = theme?.font ?? "sans-serif";
+    const font = theme?.font ?? "Open Sans";
     const primary = font.includes(" ") ? `'${font}'` : font;
     return `${primary}, sans-serif`;
 }
@@ -69,25 +69,6 @@ function resolveElementFont(elementFont: unknown, theme: ThemeLike): string {
     return themeFont(theme);
 }
 
-
-/**
- * Convert a possibly-multiline string into the body of an SVG `<text>` element.
- * Single-line strings are returned escaped as-is; multi-line strings become a
- * series of `<tspan>` elements with `x` reset to the parent's left edge and
- * `dy="1.2em"` between lines.
- */
-function multilineTspans(content: string, anchorX: number): string {
-    const lines = content.split("\n");
-    if (lines.length === 1) {
-        return escapeXml(content);
-    }
-    return lines
-        .map((line, i) => {
-            const dy = i === 0 ? "0" : "1.2em";
-            return `<tspan x="${anchorX}" dy="${dy}">${escapeXml(line)}</tspan>`;
-        })
-        .join("");
-}
 
 function escapeXml(str: unknown): string {
     return String(str)
@@ -124,7 +105,7 @@ function renderHighlight(props: Record<string, unknown>, theme: ThemeLike): stri
     }
 
     return `<rect x="${region.x}" y="${region.y}" width="${region.w}" height="${region.h}" ` +
-        `fill="${fillColor}" stroke="${strokeAttr}" stroke-width="${strokeWidthAttr}"/>`;
+        `rx="4" ry="4" fill="${fillColor}" stroke="${strokeAttr}" stroke-width="${strokeWidthAttr}"/>`;
 }
 
 function renderCircle(props: Record<string, unknown>, theme: ThemeLike): string {
@@ -198,27 +179,31 @@ function renderBadge(props: Record<string, unknown>, theme: ThemeLike): string {
     const textColor = resolveColor(props.text_color ?? "#FFFFFF", theme) ?? "#FFFFFF";
     const size = (props.size as number) ?? 32;
 
+    // Mirror the Remotion Badge layout: circle is `size` × `size`; pill is
+    // at least `size * 1.8` wide (auto-grows for long content) by `size` tall.
+    const fontSize = roundFloat(size * 0.55);
+    const isCircle = variant === "circle";
+    const minWidth = isCircle ? size : size * 1.8;
+    const padX = isCircle ? 0 : 12;
+    const naturalWidth = approximateTextWidth(content, fontSize, "bold");
+    const width = isCircle ? size : Math.max(minWidth, naturalWidth + padX * 2);
+    const height = size;
+
+    const left = roundFloat(pos.x - width / 2);
+    const top = roundFloat(pos.y - height / 2);
+    const rx = isCircle ? size / 2 : size / 2;
+
     const parts: string[] = [];
 
-    if (variant === "pill") {
-        const pillWidth = Math.max(size * 2, content.length * size * 0.7);
-        const pillHeight = size * 1.4;
-        const rx = pillHeight / 2;
-        parts.push(
-            `<rect x="${pos.x - pillWidth / 2}" y="${pos.y - pillHeight / 2}" ` +
-            `width="${pillWidth}" height="${pillHeight}" rx="${rx}" fill="${color}"/>`
-        );
-    } else {
-        parts.push(
-            `<circle cx="${pos.x}" cy="${pos.y}" r="${size}" fill="${color}"/>`
-        );
-    }
+    parts.push(
+        `<rect x="${left}" y="${top}" width="${width}" height="${height}" ` +
+        `rx="${rx}" ry="${rx}" fill="${color}" filter="url(#badgeShadow)"/>`
+    );
 
-    const fontSize = size * 0.8;
-    const fontFamily = resolveElementFont(props.font, theme);
     parts.push(
         `<text x="${pos.x}" y="${pos.y}" text-anchor="middle" dominant-baseline="central" ` +
-        `fill="${textColor}" font-size="${fontSize}" font-family="${fontFamily}">` +
+        `fill="${textColor}" font-size="${fontSize}" font-weight="bold" ` +
+        `font-family="${resolveElementFont(props.font, theme)}">` +
         `${escapeXml(content)}</text>`
     );
 
@@ -260,16 +245,22 @@ function renderZoom(props: Record<string, unknown>, theme: ThemeLike): string {
 
     const parts: string[] = [];
 
+    // Source region highlight (matches Remotion: solid 2px white at 60% opacity, rounded 4px).
     parts.push(
         `<rect x="${region.x}" y="${region.y}" width="${region.w}" height="${region.h}" ` +
-        `fill="none" stroke="rgba(255, 255, 255, 0.6)" stroke-width="2" stroke-dasharray="6 3"/>`
+        `rx="4" ry="4" fill="none" stroke="rgba(255, 255, 255, 0.6)" stroke-width="2"/>`
     );
 
+    // Magnified frame (matches Remotion: solid 2px white at 80% opacity, rounded 8px,
+    // dark backdrop, soft shadow).
     parts.push(
         `<rect x="${displayX}" y="${displayY}" width="${displayW}" height="${displayH}" ` +
-        `fill="rgba(30, 30, 30, 0.7)" stroke="rgba(255, 255, 255, 0.8)" stroke-width="2" rx="8"/>`
+        `rx="8" ry="8" fill="rgba(18, 18, 18, 1)" stroke="rgba(255, 255, 255, 0.8)" stroke-width="2" ` +
+        `filter="url(#zoomShadow)"/>`
     );
 
+    // Placeholder label (renderer leaves the magnified content to the live scene; in a static
+    // preview we surface a "Zoom xN" hint so the box is recognisable).
     const labelX = displayX + displayW / 2;
     const labelY = displayY + displayH / 2;
     parts.push(
@@ -278,22 +269,163 @@ function renderZoom(props: Record<string, unknown>, theme: ThemeLike): string {
         `Zoom x${scale}</text>`
     );
 
-    const srcMidX = region.x + region.w;
-    const srcMidY = region.y + region.h / 2;
-    parts.push(
-        `<line x1="${srcMidX}" y1="${srcMidY}" x2="${displayX}" y2="${displayY + displayH / 2}" ` +
-        `stroke="rgba(255, 255, 255, 0.3)" stroke-width="1" stroke-dasharray="4 2"/>`
-    );
-
     return parts.join("");
 }
 
-const TEXT_STYLE_PRESETS: Record<string, { fontSize: number; fontWeight: string | number }> = {
-    title:   { fontSize: 96, fontWeight: "bold" },
-    caption: { fontSize: 48, fontWeight: "normal" },
-    callout: { fontSize: 40, fontWeight: 600 },
-    label:   { fontSize: 32, fontWeight: 500 },
+interface TextStylePreset {
+    fontSize: number;
+    fontWeight: string | number;
+    background?: string;
+    paddingX?: number;
+    paddingY?: number;
+    borderRadius?: number;
+    letterSpacing?: string;
+    textTransform?: string;
+}
+
+const TEXT_STYLE_PRESETS: Record<string, TextStylePreset> = {
+    title: {
+        fontSize: 96,
+        fontWeight: "bold",
+        letterSpacing: "-0.02em",
+    },
+    caption: {
+        fontSize: 48,
+        fontWeight: "normal",
+        background: "rgba(0, 0, 0, 0.6)",
+        paddingX: 16,
+        paddingY: 8,
+        borderRadius: 8,
+    },
+    callout: {
+        fontSize: 40,
+        fontWeight: 600,
+        background: "rgba(7, 193, 7, 0.15)",
+        paddingX: 20,
+        paddingY: 12,
+        borderRadius: 12,
+    },
+    label: {
+        fontSize: 32,
+        fontWeight: 500,
+        letterSpacing: "0.05em",
+        textTransform: "uppercase",
+    },
 };
+
+const STACK_STYLE_PRESETS: Record<string, TextStylePreset> = {
+    title: {
+        fontSize: 96,
+        fontWeight: "bold",
+        letterSpacing: "-0.02em",
+    },
+    caption: {
+        fontSize: 48,
+        fontWeight: "normal",
+    },
+    callout: {
+        fontSize: 40,
+        fontWeight: 600,
+        background: "rgba(7, 193, 7, 0.15)",
+        paddingX: 20,
+        paddingY: 12,
+        borderRadius: 12,
+    },
+    label: {
+        fontSize: 32,
+        fontWeight: 500,
+        letterSpacing: "0.05em",
+        textTransform: "uppercase",
+    },
+};
+
+const LINE_HEIGHT: number = 1.2;
+
+
+/**
+ * Round a float to 2 decimals to keep SVG output free of long binary-fraction tails
+ * like `55.00000000000001` while still preserving sub-pixel positioning.
+ */
+function roundFloat(n: number): number {
+    return Math.round(n * 100) / 100;
+}
+
+
+/**
+ * Heuristic text width for laying out background rectangles in SVG. The browser
+ * renderer measures via CSS so values match exactly; here we approximate from
+ * char count × fontSize, biased by weight. Off by a few percent for common
+ * Latin text, which is acceptable for keyframe/compose previews.
+ */
+function approximateTextWidth(text: string, fontSize: number, weight: string | number): number {
+    const isBold = weight === "bold" || (typeof weight === "number" && weight >= 600);
+    const widthFactor = isBold ? 0.6 : 0.55;
+    const lines = text.split("\n");
+    const longest = lines.reduce((max, line) => Math.max(max, line.length), 0);
+    return longest * fontSize * widthFactor;
+}
+
+
+/**
+ * Render text content as SVG, splitting on `\n` into multiple <tspan> lines so
+ * the keyframe/compose preview matches the renderer's `white-space: pre-wrap`
+ * behavior. Returns the inner content of a `<text>` element.
+ */
+function renderTextLines(content: string, x: number, isFirstLineDy: boolean = false): string {
+    const lines = content.split("\n");
+    return lines
+        .map((line, i) => {
+            const dy = i === 0 ? (isFirstLineDy ? "0" : "0") : `${LINE_HEIGHT}em`;
+            return `<tspan x="${x}" dy="${dy}">${escapeXml(line)}</tspan>`;
+        })
+        .join("");
+}
+
+
+/**
+ * Compute (x, anchor) for SVG text given an alignment and the anchor position.
+ * Mirrors the Remotion CSS positioning semantics: "left" means the text starts
+ * at pos.x, "center" means the text is centred horizontally on pos.x, "right"
+ * means the text ends at pos.x.
+ */
+function alignToAnchor(align: string): { textAnchor: string; widthAnchor: "start" | "middle" | "end" } {
+    if (align === "center") return { textAnchor: "middle", widthAnchor: "middle" };
+    if (align === "right") return { textAnchor: "end", widthAnchor: "end" };
+    return { textAnchor: "start", widthAnchor: "start" };
+}
+
+
+function backgroundRect(
+    pos: { x: number; y: number },
+    textWidth: number,
+    textHeight: number,
+    align: "start" | "middle" | "end",
+    preset: TextStylePreset,
+): string {
+    if (!preset.background) return "";
+    const padX = preset.paddingX ?? 0;
+    const padY = preset.paddingY ?? 0;
+    const radius = preset.borderRadius ?? 0;
+    const w = textWidth + padX * 2;
+    const h = textHeight + padY * 2;
+
+    let left: number;
+    if (align === "middle") left = pos.x - w / 2;
+    else if (align === "end") left = pos.x - w;
+    else left = pos.x;
+
+    return `<rect x="${left}" y="${pos.y}" width="${w}" height="${h}" ` +
+        `rx="${radius}" ry="${radius}" fill="${preset.background}"/>`;
+}
+
+
+function styleTransform(preset: TextStylePreset): string {
+    const declarations: string[] = [];
+    if (preset.textTransform) declarations.push(`text-transform: ${preset.textTransform}`);
+    if (preset.letterSpacing) declarations.push(`letter-spacing: ${preset.letterSpacing}`);
+    return declarations.length === 0 ? "" : ` style="${declarations.join("; ")}"`;
+}
+
 
 function renderText(props: Record<string, unknown>, theme: ThemeLike): string {
     const pos = props.position as { x: number; y: number } | undefined;
@@ -308,18 +440,37 @@ function renderText(props: Record<string, unknown>, theme: ThemeLike): string {
     const color = resolveColor(props.color ?? "#FFFFFF", theme) ?? "#FFFFFF";
     const fontFamily = resolveElementFont(props.font, theme);
 
-    const anchorMap: Record<string, string> = { left: "start", center: "middle", right: "end" };
-    const textAnchor = anchorMap[align] ?? "start";
+    const { textAnchor, widthAnchor } = alignToAnchor(align);
+    const styleAttr = styleTransform(preset);
 
-    const transform = styleName === "label"
-        ? ` style="text-transform: uppercase; letter-spacing: 0.05em;"`
-        : "";
+    const padX = preset.paddingX ?? 0;
+    const padY = preset.paddingY ?? 0;
 
-    return `<text x="${pos.x}" y="${pos.y}" text-anchor="${textAnchor}" dominant-baseline="hanging" ` +
+    const lines = content.split("\n");
+    const textWidth = approximateTextWidth(content, fontSize, fontWeight);
+    const textHeight = lines.length * fontSize * LINE_HEIGHT;
+
+    // The renderer applies padding inside its container, so the visible glyphs sit
+    // at (pos.x + padX, pos.y + padY). Match that here so backgrounds line up.
+    const textX = widthAnchor === "middle"
+        ? pos.x
+        : widthAnchor === "end"
+            ? pos.x - padX
+            : pos.x + padX;
+    const textY = pos.y + padY;
+
+    const bgRect = backgroundRect(pos, textWidth, textHeight, widthAnchor, preset);
+
+    const tspans = renderTextLines(content, textX);
+
+    const textElement = `<text x="${textX}" y="${textY}" text-anchor="${textAnchor}" dominant-baseline="hanging" ` +
         `fill="${color}" font-size="${fontSize}" font-weight="${fontWeight}" ` +
-        `font-family="${fontFamily}"${transform}>` +
-        `${multilineTspans(content, pos.x)}</text>`;
+        `font-family="${fontFamily}"${styleAttr}>` +
+        `${tspans}</text>`;
+
+    return bgRect + textElement;
 }
+
 
 function renderStack(props: Record<string, unknown>, theme: ThemeLike): string {
     const pos = props.position as { x: number; y: number } | undefined;
@@ -329,35 +480,56 @@ function renderStack(props: Record<string, unknown>, theme: ThemeLike): string {
     if (!items || items.length === 0) return "";
 
     const gap = (props.gap as number) ?? 40;
-    // Line-height factor used by multilineTspans (`dy="1.2em"`); applied here
-    // so the next stack item starts below all of the previous item's lines.
-    const LINE_HEIGHT_EM: number = 1.2;
     const parts: string[] = [];
     let yOffset = 0;
 
     for (const item of items) {
         const content = String(item.content ?? "");
         const styleName = (item.style as string) ?? "caption";
-        const preset = TEXT_STYLE_PRESETS[styleName] ?? TEXT_STYLE_PRESETS.caption;
+        const preset = STACK_STYLE_PRESETS[styleName] ?? STACK_STYLE_PRESETS.caption;
         const fontSize = (item.font_size as number) ?? preset.fontSize;
         const fontWeight = preset.fontWeight;
+        const align = (item.align as string) ?? "left";
         const color = resolveColor(item.color ?? "#FFFFFF", theme) ?? "#FFFFFF";
         const fontFamily = resolveElementFont(item.font, theme);
-        const lineCount = content.split("\n").length;
+
+        const { textAnchor, widthAnchor } = alignToAnchor(align);
+        const styleAttr = styleTransform(preset);
+
+        const padX = preset.paddingX ?? 0;
+        const padY = preset.paddingY ?? 0;
+
+        const lines = content.split("\n");
+        const textWidth = approximateTextWidth(content, fontSize, fontWeight);
+        const textHeight = lines.length * fontSize * LINE_HEIGHT;
+        const itemHeight = textHeight + padY * 2;
+
+        const itemPos = { x: pos.x, y: pos.y + yOffset };
+
+        const textX = widthAnchor === "middle"
+            ? itemPos.x
+            : widthAnchor === "end"
+                ? itemPos.x - padX
+                : itemPos.x + padX;
+        const textY = itemPos.y + padY;
+
+        parts.push(backgroundRect(itemPos, textWidth, textHeight, widthAnchor, preset));
+
+        const tspans = renderTextLines(content, textX);
 
         parts.push(
-            `<text x="${pos.x}" y="${pos.y + yOffset}" text-anchor="start" dominant-baseline="hanging" ` +
+            `<text x="${textX}" y="${textY}" text-anchor="${textAnchor}" dominant-baseline="hanging" ` +
             `fill="${color}" font-size="${fontSize}" font-weight="${fontWeight}" ` +
-            `font-family="${fontFamily}">` +
-            `${multilineTspans(content, pos.x)}</text>`
+            `font-family="${fontFamily}"${styleAttr}>` +
+            `${tspans}</text>`
         );
 
-        const itemHeight = fontSize + Math.max(0, lineCount - 1) * fontSize * LINE_HEIGHT_EM;
         yOffset += itemHeight + gap;
     }
 
     return parts.join("");
 }
+
 
 export function renderAnnotationSvg(annotation: RenderableAnnotation, theme: ThemeLike): string {
     const { type, props } = annotation;

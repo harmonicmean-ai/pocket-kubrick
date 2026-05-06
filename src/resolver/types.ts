@@ -18,6 +18,14 @@ const RegionSchema = z.object({
 
 // --- Video metadata ---
 
+const TimelineThemeSchema = z.object({
+    background: z.string(),
+    accent: z.string(),
+    font: z.string(),
+    font_size: z.number().int(),
+    padding: z.number().int(),
+});
+
 const TimelineVideoSchema = z.object({
     title: z.string(),
     width: z.number().int().positive(),
@@ -26,6 +34,10 @@ const TimelineVideoSchema = z.object({
     total_frames: z.number().int().nonnegative(),
     total_duration_seconds: z.number().nonnegative(),
     audio_src: z.string(),
+    // Optional for backward compatibility with timeline.json files generated before
+    // the renderer needed theme info. Resolver always populates it on new builds;
+    // VideoComposition falls back to defaults if missing.
+    theme: TimelineThemeSchema.optional(),
 });
 
 
@@ -190,6 +202,7 @@ const TimelineSchema = z.object({
 
 // --- Inferred types ---
 
+export type TimelineTheme = z.infer<typeof TimelineThemeSchema>;
 export type TimelineVideo = z.infer<typeof TimelineVideoSchema>;
 export type TimelineScene = z.infer<typeof TimelineSceneSchema>;
 export type TimelineEvent = z.infer<typeof TimelineEventSchema>;
@@ -240,6 +253,7 @@ export interface TimepointsFile {
 
 export {
     TimelineSchema,
+    TimelineThemeSchema,
     TimelineVideoSchema,
     TimelineSceneSchema,
     TimelineEventSchema,
