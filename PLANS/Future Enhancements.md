@@ -12,4 +12,4 @@
 *   When re-building a video where the scene count has changed, build fails and you have to delete some of the generated (runtime) files.
 *   Not sure why videos can seemingly only be generated at 30fps. (Granted, my testing was limited.)
 *   In the compose tool, pressing C to activate the circle tool is great, but not when it is also triggered by `ctrl+c` to copy. This probably extends to other keystrokes.
-*   The preview tool doesn't display custom fonts.
+*   The preview tool doesn't display custom fonts. // TESTME: this may no longer be true after early May enhancements
