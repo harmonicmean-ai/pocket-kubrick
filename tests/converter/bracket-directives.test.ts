@@ -89,6 +89,13 @@ describe("preProcessDirectives", () => {
         expect(result.text).not.toContain("[sub");
     });
 
+    it("preserves [sub] visible content in transcript mode", () => {
+        const result = preProcessDirectives("Click on [sub /ˈwɪdʒɪt/]widget[/sub] now.", "transcript");
+        expect(result.text).toBe("Click on widget now.");
+        expect(result.text).not.toContain("ˈwɪdʒɪt");
+        expect(result.text).not.toContain("[sub");
+    });
+
     it("handles multiple directives in one text", () => {
         const result = preProcessDirectives(
             "Hello [pause 1s] [rate slow]world[/rate] [pause 500ms] done.",

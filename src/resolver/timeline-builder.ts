@@ -369,6 +369,13 @@ export function buildTimeline(
         total_frames: totalFrames,
         total_duration_seconds: totalDurationSeconds,
         audio_src: "generated/audio/full.mp3",
+        theme: {
+            background: config.video.theme.background,
+            accent: config.video.theme.accent,
+            font: config.video.theme.font,
+            font_size: config.video.theme.font_size,
+            padding: config.video.theme.padding,
+        },
     };
 
     const timeline: Timeline = {
@@ -419,6 +426,7 @@ function resolveStackItems(
             animate: item.animate ?? null,
             animate_frames: itemAnimFrames,
             color: item.color ?? "#FFFFFF",
+            font: item.font ?? null,
             font_size: item.font_size ?? null,
             align: item.align ?? null,
             start_frame: itemStartFrame,

@@ -73,6 +73,10 @@ export const Screenshot: React.FC<ScreenshotProps> = ({ event, frame, fps, curre
         width: "100%",
         height: "100%",
         objectFit: event.fit,
+        // Inset screenshots anchor contain-fit to top-left so the image's
+        // (0,0) lines up with the configured position. Matches sharp's
+        // `inside` fit (keyframes path) and SVG `xMinYMin meet` (compose path).
+        objectPosition: isInset ? "left top" : undefined,
         borderRadius: event.border_radius ? `${event.border_radius}px` : undefined,
         boxShadow: event.shadow ? "0 8px 32px rgba(0, 0, 0, 0.4)" : undefined,
     };

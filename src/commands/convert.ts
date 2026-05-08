@@ -76,9 +76,27 @@ function convertScene(
 
     verbose(`Converting scene ${sceneIndex}: ${label}`);
 
-    // Convert MD to segments
+    // Convert MD to segments (TTS form -- includes IPA substitutions, spell-outs, etc.)
     const { segments, diagnostics: convertDiags } = convertMarkdownToSegments(markdown);
     diagnostics.push(...convertDiags);
+
+    // Second pass for transcript form: same pipeline but [sub] keeps its visible
+    // content. Diagnostics are deduplicated against the TTS pass.
+    const { segments: transcriptSegments } = convertMarkdownToSegments(markdown, { mode: "transcript" });
+    if (segments.length === transcriptSegments.length) {
+        for (let i = 0; i < segments.length; i++) {
+            const ttsText: string = segments[i].text;
+            const trText: string = transcriptSegments[i].text;
+            if (trText && trText !== ttsText) {
+                segments[i].transcriptText = trText;
+            }
+        }
+    } else {
+        diagnostics.push({
+            severity: "warning",
+            message: `Scene ${label}: TTS and transcript passes produced different segment counts (${segments.length} vs ${transcriptSegments.length}); transcripts will fall back to TTS text.`,
+        });
+    }
 
     // Collect string anchors from visuals (at, disappear_at, children, stack items)
     const anchors: string[] = collectStringAnchors(scene.visuals);

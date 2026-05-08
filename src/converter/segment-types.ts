@@ -13,6 +13,12 @@
 export interface ScriptSegment {
     /** Plain text for this segment. May contain Inworld markup (*emphasis*, /IPA/). */
     text: string;
+    /**
+     * Human-readable form of `text` for transcripts. Set only when it differs
+     * from `text` (e.g., [sub] directives keep the visible content here while
+     * `text` carries the IPA pronunciation hint for Inworld).
+     */
+    transcriptText?: string;
     /** Override voice key from the config voices map (from [voice] directive). */
     voiceId?: string;
     /** Override speaking rate (from [rate] directive). */
@@ -21,6 +27,12 @@ export interface ScriptSegment {
     emotion?: string;
     /** Milliseconds of silence to insert after this segment's audio. */
     pauseAfterMs?: number;
+    /**
+     * True when the trailing pause came from an explicit [pause] directive
+     * rather than a paragraph or thematic break. Transcript output collapses
+     * these into the surrounding paragraph instead of starting a new one.
+     */
+    pauseFromDirective?: boolean;
 }
 
 

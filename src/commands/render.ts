@@ -8,6 +8,8 @@ import { resolveProjectRoot, getConfigPath, localTimestamp, resolveRemotionEntry
 import { loadVideoConfig } from "../parser/yaml-loader.js";
 import { formatDiagnostics } from "../util/errors.js";
 import { info, setVerbose, verbose as verboseLog, warn, progressBar, clearProgress } from "../util/logger.js";
+import { ensureFonts, type FontManifestEntry } from "../util/font-downloader.js";
+import { collectFontsFromTimeline } from "../util/font-collector.js";
 import type { DiagnosticMessage } from "../util/errors.js";
 import type { VideoConfig } from "../schema/types.js";
 import type { Timeline } from "../resolver/types.js";
@@ -101,6 +103,22 @@ export async function runRender(
         return { success: false, diagnostics, outputFiles };
     }
 
+    // Ensure all fonts referenced by the timeline are downloaded into
+    // <projectRoot>/fonts/ before bundling. The resulting manifest is
+    // passed to the composition as an input prop.
+    let fontManifest: FontManifestEntry[] = [];
+    try {
+        const requestedFamilies: string[] = collectFontsFromTimeline(timeline);
+        info(`  Ensuring fonts: ${requestedFamilies.join(", ")}`);
+        fontManifest = await ensureFonts(requestedFamilies, projectRoot);
+    } catch (e) {
+        diagnostics.push({
+            severity: "error",
+            message: `Font download failed: ${(e as Error).constructor.name}: ${(e as Error).message}`,
+        });
+        return { success: false, diagnostics, outputFiles };
+    }
+
     // Bundle the Remotion project
     info("  Bundling Remotion project...");
     let bundleLocation: string;
@@ -146,7 +164,7 @@ export async function runRender(
         composition = await selectComposition({
             serveUrl: bundleLocation,
             id: "VideoComposition",
-            inputProps: { timeline: renderTimeline },
+            inputProps: { timeline: renderTimeline, fonts: fontManifest },
         });
     } catch (e) {
         diagnostics.push({
@@ -176,7 +194,7 @@ export async function runRender(
             serveUrl: bundleLocation,
             codec: primaryCodec as any,
             outputLocation: primaryOutputPath,
-            inputProps: { timeline: renderTimeline },
+            inputProps: { timeline: renderTimeline, fonts: fontManifest },
             crf: primaryCodec === "prores" ? undefined : quality.crf,
             imageFormat: quality.imageFormat,
             jpegQuality: quality.jpegQuality,

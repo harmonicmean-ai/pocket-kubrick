@@ -6,6 +6,8 @@ import { resolveProjectRoot, getConfigPath, resolveRemotionEntryPoint } from "..
 import { loadVideoConfig } from "../parser/yaml-loader.js";
 import { formatDiagnostics } from "../util/errors.js";
 import { info, setVerbose } from "../util/logger.js";
+import { ensureFonts } from "../util/font-downloader.js";
+import { collectFontsFromTimeline } from "../util/font-collector.js";
 import type { Timeline } from "../resolver/types.js";
 
 
@@ -20,7 +22,7 @@ export interface PreviewOptions {
  * CLI handler for `pocket-kubrick preview`.
  * Launches Remotion Studio for interactive browser-based preview.
  */
-export function previewCommand(options: PreviewOptions): void {
+export async function previewCommand(options: PreviewOptions): Promise<void> {
     if (options.verbose) {
         setVerbose(true);
     }
@@ -42,8 +44,21 @@ export function previewCommand(options: PreviewOptions): void {
 
     // Read timeline and write as a props file for Remotion Studio
     const timeline: Timeline = JSON.parse(readFileSync(timelinePath, "utf-8"));
+
+    // Ensure fonts are downloaded into <projectRoot>/fonts/ so Studio's
+    // <FontStyles> component has them available via staticFile().
+    const fontFamilies: string[] = collectFontsFromTimeline(timeline);
+    info(`  Ensuring fonts: ${fontFamilies.join(", ")}`);
+    let fontManifest: Awaited<ReturnType<typeof ensureFonts>> = [];
+    try {
+        fontManifest = await ensureFonts(fontFamilies, projectRoot);
+    } catch (e) {
+        console.error(`Font ensure failed: ${(e as Error).constructor.name}: ${(e as Error).message}`);
+        process.exit(1);
+    }
+
     const propsPath: string = join(projectRoot, "generated", "remotion-props.json");
-    writeFileSync(propsPath, JSON.stringify({ timeline }, null, 2));
+    writeFileSync(propsPath, JSON.stringify({ timeline, fonts: fontManifest }, null, 2));
 
     // Resolve entry point
     const currentDir: string = dirname(fileURLToPath(import.meta.url));

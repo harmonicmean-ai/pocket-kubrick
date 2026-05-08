@@ -1,16 +1,32 @@
 import React from "react";
 import { AbsoluteFill, Audio, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { SceneContainer } from "./components/SceneContainer";
+import { FontStyles } from "./components/FontStyles";
+import type { FontEntry } from "./components/FontStyles";
 import { EventRenderer } from "./util/event-renderer";
-import type { Timeline, TimelineScene, TimelineEvent } from "./util/types";
+import { ThemeContext } from "./util/theme-context";
+import type { Timeline, TimelineScene, TimelineEvent, TimelineTheme } from "./util/types";
+
+
+// Fallback theme for timelines generated before `theme` was baked in. Keep the
+// values aligned with the ThemeSchema defaults in src/schema/video-config.ts so
+// older timeline.json files render the same as before this field was added.
+const DEFAULT_THEME: TimelineTheme = {
+    background: "#121212",
+    accent: "#07C107",
+    font: "Open Sans",
+    font_size: 48,
+    padding: 40,
+};
 
 
 interface VideoCompositionProps {
     timeline: Timeline;
+    fonts?: FontEntry[];
 }
 
 
-export const VideoComposition: React.FC<VideoCompositionProps> = ({ timeline }) => {
+export const VideoComposition: React.FC<VideoCompositionProps> = ({ timeline, fonts = [] }) => {
     const frame: number = useCurrentFrame();
     const { fps } = useVideoConfig();
 
@@ -50,32 +66,39 @@ export const VideoComposition: React.FC<VideoCompositionProps> = ({ timeline }) 
             : frame >= e.start_frame && frame <= e.end_frame)
         .sort((a, b) => a.z_index - b.z_index);
 
+    const theme: TimelineTheme = timeline.video.theme ?? DEFAULT_THEME;
+
     return (
-        <AbsoluteFill style={{ backgroundColor: timeline.video.title ? "#000000" : "#121212" }}>
-            {/* Background layer */}
-            <AbsoluteFill style={{ backgroundColor: "#121212" }} />
+        <ThemeContext.Provider value={theme}>
+            <AbsoluteFill style={{ backgroundColor: theme.background }}>
+                {/* Self-hosted fonts (no-op when fonts is empty) */}
+                <FontStyles fonts={fonts} />
 
-            {/* Scene container with transition */}
-            {activeScene && (
-                <SceneContainer
-                    scene={activeScene}
-                    currentFrame={holdingScene ? activeScene.end_frame - 1 : frame}
-                    fps={fps}
-                >
-                    {/* Visual events -- clamp to end_frame when holding */}
-                    {activeEvents.map((event) => (
-                        <EventRenderer
-                            key={event.id}
-                            event={event}
-                            currentFrame={holdingScene ? activeScene.end_frame - 1 : frame}
-                            fps={fps}
-                        />
-                    ))}
-                </SceneContainer>
-            )}
+                {/* Background layer */}
+                <AbsoluteFill style={{ backgroundColor: theme.background }} />
 
-            {/* Audio track */}
-            <Audio src={staticFile(timeline.video.audio_src)} />
-        </AbsoluteFill>
+                {/* Scene container with transition */}
+                {activeScene && (
+                    <SceneContainer
+                        scene={activeScene}
+                        currentFrame={holdingScene ? activeScene.end_frame - 1 : frame}
+                        fps={fps}
+                    >
+                        {/* Visual events -- clamp to end_frame when holding */}
+                        {activeEvents.map((event) => (
+                            <EventRenderer
+                                key={event.id}
+                                event={event}
+                                currentFrame={holdingScene ? activeScene.end_frame - 1 : frame}
+                                fps={fps}
+                            />
+                        ))}
+                    </SceneContainer>
+                )}
+
+                {/* Audio track */}
+                <Audio src={staticFile(timeline.video.audio_src)} />
+            </AbsoluteFill>
+        </ThemeContext.Provider>
     );
 };

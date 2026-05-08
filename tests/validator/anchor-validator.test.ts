@@ -56,6 +56,15 @@ describe("validateAnchors", () => {
         expect(diagnostics.filter((d) => d.severity === "error")).toHaveLength(0);
     });
 
+    it("matches anchors that span a hyphenated word in the script", () => {
+        const config = makeConfig(
+            ["multi-factor authentication"],
+            "Every account requires multi-factor authentication.",
+        );
+        const diagnostics = validateAnchors(config);
+        expect(diagnostics.filter((d) => d.severity === "error")).toHaveLength(0);
+    });
+
     it("warns for duplicate anchors in same scene", () => {
         const config = makeConfig(["settings-icon", "settings-icon"], SETTINGS_SCRIPT);
         const diagnostics = validateAnchors(config);

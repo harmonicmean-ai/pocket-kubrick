@@ -5,6 +5,7 @@
 export type {
     Timeline,
     TimelineVideo,
+    TimelineTheme,
     TimelineScene,
     TimelineEvent,
     ChildTimelineEvent,

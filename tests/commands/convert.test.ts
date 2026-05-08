@@ -59,6 +59,48 @@ describe("runConversion", () => {
         expect(fullText).toContain("*settings icon*");
     });
 
+    it("populates transcriptText when [sub] swaps in an IPA pronunciation", () => {
+        const { config } = runValidation({ project: tempProject });
+        expect(config).not.toBeNull();
+        // Inject a [sub] directive into the first scene's script
+        config!.scenes[0].script = `Bonjour, je m'appelle [sub /lj̃ɛ/]lien[/sub].`;
+
+        const result = runConversion(config!, tempProject);
+        expect(result.success).toBe(true);
+
+        const scene01: ConvertedScene = JSON.parse(
+            readFileSync(result.outputFiles[0], "utf-8"),
+        );
+        const subSegment = scene01.segments.find((s) => s.text.includes("/lj̃ɛ/"));
+        expect(subSegment).toBeDefined();
+        expect(subSegment!.transcriptText).toBeDefined();
+        expect(subSegment!.transcriptText).toContain("lien");
+        expect(subSegment!.transcriptText).not.toContain("/lj̃ɛ/");
+    });
+
+    it("flags pauseFromDirective only for explicit [pause] directives", () => {
+        const { config } = runValidation({ project: tempProject });
+        expect(config).not.toBeNull();
+        // Mid-paragraph pause AND a paragraph break that should NOT be flagged.
+        config!.scenes[0].script = `Hello there [pause 1s] how are you?\n\nAnd a new paragraph.`;
+
+        const result = runConversion(config!, tempProject);
+        expect(result.success).toBe(true);
+
+        const scene01: ConvertedScene = JSON.parse(
+            readFileSync(result.outputFiles[0], "utf-8"),
+        );
+        const helloSeg = scene01.segments.find((s) => s.text === "Hello there");
+        expect(helloSeg).toBeDefined();
+        expect(helloSeg!.pauseFromDirective).toBe(true);
+        expect(helloSeg!.pauseAfterMs).toBe(1000);
+
+        const howAreYouSeg = scene01.segments.find((s) => s.text === "how are you?");
+        expect(howAreYouSeg).toBeDefined();
+        // Trailing pause here is the paragraph break, not a directive.
+        expect(howAreYouSeg!.pauseFromDirective).toBeUndefined();
+    });
+
     it("handles voice directives in scene 03", () => {
         const { config } = runValidation({ project: tempProject });
         const result = runConversion(config!, tempProject);

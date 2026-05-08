@@ -1,7 +1,7 @@
 import type { VideoConfig } from "../schema/types.js";
 import type { DiagnosticMessage } from "../util/errors.js";
 import { collectStringAnchors } from "../util/collect-anchors.js";
-import { normalizeAnchor } from "../util/text-normalize.js";
+import { normalizeForMatching } from "../util/text-normalize.js";
 import { sceneLabel } from "../util/scene-label.js";
 
 
@@ -34,13 +34,12 @@ export function validateAnchors(config: VideoConfig): DiagnosticMessage[] {
             }
         }
 
-        const content: string = scene.script;
-        const normalizedContent: string = content.toLowerCase();
+        const normalizedContent: string = normalizeForMatching(scene.script);
 
         // Check each unique anchor
         const uniqueAnchors: Set<string> = new Set(anchors);
         for (const anchor of uniqueAnchors) {
-            const searchText: string = normalizeAnchor(anchor);
+            const searchText: string = normalizeForMatching(anchor);
             const firstIndex: number = normalizedContent.indexOf(searchText);
 
             if (firstIndex === -1) {
